@@ -2,9 +2,9 @@ import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+import bcrypt
 from fastapi import Cookie, Depends, HTTPException, status
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,20 +13,17 @@ from database import get_db
 from models import User
 
 # ── Password hashing ──────────────────────────────────────────────────────────
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def _prepare_password(plain: str) -> str:
+def _prepare_password(plain: str) -> bytes:
     """SHA-256 pre-hash so bcrypt's 72-byte limit is never hit."""
-    return hashlib.sha256(plain.encode()).hexdigest()
+    return hashlib.sha256(plain.encode()).hexdigest().encode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(_prepare_password(plain), hashed)
+    return bcrypt.checkpw(_prepare_password(plain), hashed.encode())
 
 
 def get_password_hash(plain: str) -> str:
-    return pwd_context.hash(_prepare_password(plain))
+    return bcrypt.hashpw(_prepare_password(plain), bcrypt.gensalt()).decode()
 
 
 # ── JWT ───────────────────────────────────────────────────────────────────────
