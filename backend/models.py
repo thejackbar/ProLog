@@ -13,7 +13,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, JSON, UUID
+from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
@@ -93,7 +93,7 @@ class Case(Base):
     # Obstetrics-specific
     pregnant: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)
     complications: Mapped[list[str] | None] = mapped_column(
-        ARRAY(String), nullable=True, default=list
+        JSON, nullable=True, default=list
     )
     prev_cs: Mapped[int | None] = mapped_column(Integer, nullable=True)
     sterilisation: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)
