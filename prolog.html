@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ProLog — Clinical Case Logbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --midnight:#060810;--deep:#0c0f1e;--panel:#151929;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e8ecf8;--muted:#6b7599;--faint:#3a4060;
+  --blue:#4f8dff;--blue2:#2563eb;--teal:#2dd4bf;--rose:#fb7185;
+  --amber:#fbbf24;--violet:#a78bfa;--green:#34d399;
+  --glass-border:rgba(255,255,255,0.10);
+  --glow-blue:0 0 40px rgba(79,141,255,0.18);--r:16px;--r-lg:24px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--midnight);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 15% 20%,rgba(79,141,255,0.08) 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 85% 80%,rgba(45,212,191,0.07) 0%,transparent 55%);pointer-events:none;z-index:0;}
+
+/* AUTH */
+#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;z-index:1;}
+.auth-card{width:100%;max-width:460px;background:rgba(15,18,32,0.93);backdrop-filter:blur(40px);border:1px solid var(--glass-border);border-radius:28px;padding:48px 44px;box-shadow:0 32px 80px rgba(0,0,0,0.5),var(--glow-blue);position:relative;overflow:hidden;}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(79,141,255,0.5),rgba(45,212,191,0.4),transparent);}
+.auth-logo{font-family:'Playfair Display',serif;font-size:30px;color:var(--text);margin-bottom:6px;}
+.auth-logo span{background:linear-gradient(135deg,var(--blue),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.auth-tag{color:var(--muted);font-size:13px;margin-bottom:36px;}
+.tab-row{display:flex;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:28px;gap:4px;}
+.tab-btn{flex:1;padding:9px;border:none;background:transparent;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all 0.2s;}
+.tab-btn.active{background:rgba(79,141,255,0.15);color:var(--blue);}
+
+/* FIELDS */
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(79,141,255,0.5);box-shadow:0 0 0 3px rgba(79,141,255,0.1);}
+.field select option{background:var(--panel);color:var(--text);}
+.field textarea{resize:vertical;min-height:100px;line-height:1.6;}
+.field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.5);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 20px;border:none;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.2px;}
+.btn-primary{background:linear-gradient(135deg,var(--blue2),var(--blue));color:white;width:100%;box-shadow:0 4px 20px rgba(79,141,255,0.3);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(79,141,255,0.4);}
+.btn-glass{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--muted);}
+.btn-glass:hover{background:rgba(255,255,255,0.1);color:var(--text);}
+.btn-teal{background:linear-gradient(135deg,#0d9488,var(--teal));color:white;}
+.btn-teal:hover{transform:translateY(-1px);}
+.btn-rose{background:rgba(251,113,133,0.12);color:var(--rose);border:1px solid rgba(251,113,133,0.2);}
+.btn-rose:hover{background:rgba(251,113,133,0.22);}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:7px;}
+.alert{padding:10px 13px;border-radius:9px;font-size:13px;margin-bottom:14px;display:none;}
+.alert.show{display:block;}
+.alert-error{background:rgba(251,113,133,0.1);color:var(--rose);border:1px solid rgba(251,113,133,0.2);}
+.alert-success{background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.2);}
+
+/* APP SHELL */
+#app-screen{display:none;min-height:100vh;position:relative;z-index:1;}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:252px;background:rgba(9,11,22,0.95);backdrop-filter:blur(40px);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:26px 0;z-index:100;}
+.sidebar::after{content:'';position:absolute;top:0;right:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,rgba(79,141,255,0.25),rgba(45,212,191,0.15),transparent);pointer-events:none;}
+.sidebar-logo{font-family:'Playfair Display',serif;font-size:23px;color:var(--text);padding:0 22px;margin-bottom:32px;display:flex;align-items:center;gap:9px;}
+.sidebar-logo span{background:linear-gradient(135deg,var(--blue),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--teal));box-shadow:0 0 8px var(--blue);flex-shrink:0;}
+.nav-label{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--faint);padding:0 22px;margin-bottom:6px;margin-top:18px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 18px 9px 22px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.18s;border-left:2px solid transparent;margin:1px 0;position:relative;}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.03);}
+.nav-item.active{color:var(--text);background:rgba(79,141,255,0.08);border-left-color:var(--blue);}
+.nav-item.active::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:3px;height:55%;border-radius:2px 0 0 2px;background:linear-gradient(var(--blue),var(--teal));}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.sidebar-footer{margin-top:auto;padding:16px 18px 0;border-top:1px solid var(--border);}
+.user-chip{display:flex;align-items:center;gap:9px;cursor:pointer;padding:8px;border-radius:10px;transition:background 0.2s;}
+.user-chip:hover{background:rgba(255,255,255,0.04);}
+.user-avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--blue2),var(--teal));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:white;box-shadow:0 0 12px rgba(79,141,255,0.25);}
+.user-meta{flex:1;min-width:0;}
+.user-name{color:var(--text);font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-sub{color:var(--faint);font-size:11px;}
+.btn-signout{background:none;border:none;color:var(--faint);cursor:pointer;font-size:15px;padding:4px;transition:color 0.15s;}
+.btn-signout:hover{color:var(--rose);}
+
+/* MAIN */
+.main{margin-left:252px;padding:34px 38px;min-height:100vh;}
+.page{display:none;}
+.page.active{display:block;}
+.page-header{margin-bottom:28px;display:flex;justify-content:space-between;align-items:flex-start;}
+.page-title{font-family:'Playfair Display',serif;font-size:30px;color:var(--text);letter-spacing:-0.5px;margin-bottom:4px;}
+.page-sub{color:var(--muted);font-size:13px;}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.stat-card{padding:20px 22px;background:rgba(21,25,41,0.7);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--r);position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;cursor:pointer;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(0,0,0,0.3);}
+.stat-card::before{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,0.04) 0%,transparent 60%);pointer-events:none;}
+.stat-glow{position:absolute;top:-25px;right:-25px;width:90px;height:90px;border-radius:50%;opacity:0.13;pointer-events:none;}
+.sg-blue{background:var(--blue);}.sg-teal{background:var(--teal);}.sg-rose{background:var(--rose);}.sg-violet{background:var(--violet);}.sg-amber{background:var(--amber);}.sg-green{background:var(--green);}
+.stat-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;}
+.stat-value{font-family:'Playfair Display',serif;font-size:38px;color:var(--text);letter-spacing:-1.5px;line-height:1;margin-bottom:4px;}
+.stat-delta{font-size:11px;color:var(--muted);}
+
+/* CARDS */
+.card{background:rgba(21,25,41,0.7);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:18px;position:relative;overflow:hidden;}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);pointer-events:none;}
+.card-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--text);margin-bottom:18px;letter-spacing:-0.3px;display:flex;align-items:center;gap:9px;}
+.card-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:rgba(79,141,255,0.12);color:var(--blue);border:1px solid rgba(79,141,255,0.2);}
+
+/* DASHBOARD FILTER BAR */
+.dash-filters{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+.dash-filters input,.dash-filters select{padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:var(--text);outline:none;transition:border-color 0.2s;}
+.dash-filters input:focus,.dash-filters select:focus{border-color:rgba(79,141,255,0.4);}
+.dash-filters select option{background:var(--panel);}
+.dash-filters input[type=date]{min-width:130px;}
+.filter-label{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap;}
+
+/* CASE CARDS */
+.filter-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.filter-bar input,.filter-bar select{padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color 0.2s;}
+.filter-bar input{flex:1;min-width:160px;}
+.filter-bar input:focus,.filter-bar select:focus{border-color:rgba(79,141,255,0.4);}
+.filter-bar select option{background:var(--panel);}
+.case-list{display:flex;flex-direction:column;gap:9px;}
+.case-card{background:rgba(21,25,41,0.6);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;transition:all 0.2s;cursor:pointer;position:relative;overflow:hidden;}
+.case-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--blue),var(--teal));opacity:0;transition:opacity 0.2s;}
+.case-card:hover{border-color:rgba(79,141,255,0.3);transform:translateX(3px);}
+.case-card:hover::before{opacity:1;}
+.case-pid{font-weight:700;font-size:14px;color:var(--text);}
+.case-meta-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:3px;}
+.case-date{font-size:11px;color:var(--muted);}
+.case-preview{font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:6px;}
+.pregnant-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.25);}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.b-obs{background:rgba(251,191,36,0.1);color:var(--amber);border:1px solid rgba(251,191,36,0.2);}
+.b-gyn{background:rgba(167,139,250,0.1);color:var(--violet);border:1px solid rgba(167,139,250,0.2);}
+.b-art{background:rgba(45,212,191,0.1);color:var(--teal);border:1px solid rgba(45,212,191,0.2);}
+.b-blue{background:rgba(79,141,255,0.12);color:#7aa8ff;border:1px solid rgba(79,141,255,0.2);}
+
+/* FORM SECTIONS */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-section{padding:18px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:11px;margin-bottom:14px;}
+.form-section-title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.section-badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(79,141,255,0.12);color:var(--blue);}
+
+/* PROCEDURE DROPDOWNS */
+.proc-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+.proc-row .field{margin-bottom:0;}
+
+/* COMPLICATIONS CHECKBOXES */
+.comp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:4px;}
+.comp-check{display:flex;align-items:center;gap:9px;padding:9px 12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.15s;user-select:none;}
+.comp-check:hover{background:rgba(255,255,255,0.04);border-color:var(--border2);}
+.comp-check.checked{background:rgba(251,113,133,0.07);border-color:rgba(251,113,133,0.25);}
+.comp-check input[type=checkbox]{display:none;}
+.chk-box{width:16px;height:16px;border-radius:4px;flex-shrink:0;background:rgba(255,255,255,0.05);border:1.5px solid var(--faint);display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.comp-check.checked .chk-box{background:var(--rose);border-color:var(--rose);}
+.chk-icon{font-size:10px;color:white;opacity:0;transition:opacity 0.12s;}
+.comp-check.checked .chk-icon{opacity:1;}
+.chk-label{font-size:12px;font-weight:600;color:var(--text);}
+
+/* PREGNANT TOGGLE */
+.pregnant-toggle{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:10px;cursor:pointer;transition:all 0.15s;user-select:none;}
+.pregnant-toggle:hover{background:rgba(52,211,153,0.1);}
+.pregnant-toggle.checked{background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.35);}
+.pt-box{width:18px;height:18px;border-radius:5px;flex-shrink:0;background:rgba(255,255,255,0.05);border:1.5px solid var(--faint);display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.pregnant-toggle.checked .pt-box{background:var(--green);border-color:var(--green);}
+.pt-icon{font-size:11px;color:white;opacity:0;transition:opacity 0.12s;}
+.pregnant-toggle.checked .pt-icon{opacity:1;}
+.pt-label{font-size:13px;font-weight:600;color:var(--text);}
+.pt-desc{font-size:11px;color:var(--muted);margin-top:1px;}
+
+/* CAESAREAN EXTRA FIELDS */
+.caesar-fields{background:rgba(251,191,36,0.04);border:1px solid rgba(251,191,36,0.15);border-radius:10px;padding:14px;margin-top:12px;}
+.caesar-fields .form-section-title{color:var(--amber);}
+.sterilisation-toggle{display:flex;align-items:center;gap:9px;padding:10px 12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.15s;user-select:none;}
+.sterilisation-toggle:hover{background:rgba(255,255,255,0.04);}
+.sterilisation-toggle.checked{background:rgba(79,141,255,0.08);border-color:rgba(79,141,255,0.3);}
+.sterilisation-toggle input[type=checkbox]{display:none;}
+.st-box{width:16px;height:16px;border-radius:4px;flex-shrink:0;background:rgba(255,255,255,0.05);border:1.5px solid var(--faint);display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.sterilisation-toggle.checked .st-box{background:var(--blue);border-color:var(--blue);}
+.st-icon{font-size:10px;color:white;opacity:0;transition:opacity 0.12s;}
+.sterilisation-toggle.checked .st-icon{opacity:1;}
+.st-label{font-size:12px;font-weight:600;color:var(--text);}
+
+/* HOSPITAL AUTOCOMPLETE */
+.hospital-wrap{position:relative;}
+.hospital-suggestions{position:absolute;top:calc(100% + 4px);left:0;right:0;background:rgba(15,18,32,0.97);border:1px solid var(--border2);border-radius:9px;z-index:50;overflow:hidden;display:none;}
+.hospital-suggestions.show{display:block;}
+.hosp-opt{padding:9px 13px;font-size:13px;color:var(--text);cursor:pointer;transition:background 0.15s;}
+.hosp-opt:hover{background:rgba(79,141,255,0.1);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,10,0.8);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal{background:rgba(13,16,30,0.98);backdrop-filter:blur(40px);border:1px solid var(--glass-border);border-radius:20px;padding:32px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.6),var(--glow-blue);position:relative;}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(79,141,255,0.4),rgba(45,212,191,0.3),transparent);}
+.modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;}
+.modal-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--text);}
+.btn-close{background:rgba(255,255,255,0.06);border:1px solid var(--border);width:30px;height:30px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all 0.15s;flex-shrink:0;}
+.btn-close:hover{background:rgba(251,113,133,0.15);color:var(--rose);}
+.modal-field{margin-bottom:16px;}
+.mf-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;}
+.mf-value{font-size:14px;color:var(--text);line-height:1.7;}
+.mf-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+
+/* ANALYTICS */
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:150px;padding-bottom:28px;position:relative;}
+.bar-chart::after{content:'';position:absolute;bottom:28px;left:0;right:0;height:1px;background:var(--border);}
+.bar-group{flex:1;display:flex;flex-direction:column;align-items:center;}
+.bar-track{flex:1;width:100%;display:flex;align-items:flex-end;padding:0 3px;}
+.bar-fill{width:100%;border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--blue),rgba(79,141,255,0.3));box-shadow:0 0 10px rgba(79,141,255,0.2);transition:height 0.8s cubic-bezier(0.4,0,0.2,1);min-height:2px;position:relative;cursor:pointer;}
+.bar-fill:hover{background:linear-gradient(180deg,var(--teal),rgba(45,212,191,0.4));}
+.bar-fill::after{content:attr(data-val);position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--text);opacity:0;transition:opacity 0.2s;pointer-events:none;white-space:nowrap;}
+.bar-fill:hover::after{opacity:1;}
+.bar-label{font-size:9px;color:var(--muted);margin-top:5px;white-space:nowrap;}
+
+.week-nav{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.week-label{font-size:13px;font-weight:600;color:var(--text);flex:1;text-align:center;}
+.btn-week{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--muted);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.btn-week:hover{background:rgba(255,255,255,0.1);color:var(--text);}
+.daily-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;}
+.day-col{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:11px;padding:10px 7px;text-align:center;min-height:90px;transition:all 0.2s;}
+.day-col.today{border-color:rgba(79,141,255,0.4);background:rgba(79,141,255,0.05);}
+.day-name{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;}
+.day-num{font-family:'Playfair Display',serif;font-size:18px;color:var(--text);margin-bottom:8px;}
+.day-count{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--blue),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:3px;}
+.day-count.zero{background:none;-webkit-text-fill-color:var(--faint);}
+
+.outcome-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.outcome-stat{padding:20px 22px;background:rgba(21,25,41,0.7);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--r);position:relative;overflow:hidden;transition:transform 0.2s;}
+.outcome-stat:hover{transform:translateY(-2px);}
+.outcome-stat::before{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,0.04) 0%,transparent 60%);pointer-events:none;}
+.os-glow{position:absolute;top:-25px;right:-25px;width:90px;height:90px;border-radius:50%;opacity:0.13;pointer-events:none;}
+.os-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;}
+.os-val{font-family:'Playfair Display',serif;font-size:38px;color:var(--text);letter-spacing:-1.5px;line-height:1;margin-bottom:4px;}
+.os-delta{font-size:11px;color:var(--muted);}
+
+.donut-wrap{display:flex;align-items:center;gap:24px;}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:9px;}
+.legend-item{display:flex;align-items:center;gap:9px;font-size:12px;cursor:pointer;padding:4px 6px;border-radius:6px;transition:background 0.15s;}
+.legend-item:hover{background:rgba(255,255,255,0.04);}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.legend-label{flex:1;color:var(--muted);}
+.legend-val{color:var(--text);font-weight:700;}
+
+/* PROFILE */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.qual-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;}
+.qual-info .qual-name{font-size:13px;font-weight:600;color:var(--text);}
+.qual-info .qual-date{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* SPINNER */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-icon{font-size:36px;margin-bottom:12px;display:block;opacity:0.4;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--faint);border-radius:3px;}
+
+/* AI PANEL */
+.ai-panel{background:linear-gradient(135deg,rgba(10,14,32,0.96),rgba(6,10,24,0.98));border:1px solid rgba(79,141,255,0.2);border-radius:var(--r-lg);padding:28px;margin-bottom:18px;position:relative;overflow:hidden;}
+.ai-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--blue),var(--teal),transparent);}
+.ai-orb{position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(79,141,255,0.12),transparent 70%);pointer-events:none;}
+.ai-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--text);margin-bottom:5px;position:relative;}
+.ai-sub{color:var(--muted);font-size:12px;margin-bottom:20px;position:relative;}
+.ai-key-row{display:flex;gap:9px;margin-bottom:12px;position:relative;}
+.ai-key-row input{flex:1;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--text);outline:none;}
+.ai-key-row input:focus{border-color:rgba(79,141,255,0.5);}
+.ai-key-row input::placeholder{color:var(--faint);}
+.btn-ai{background:linear-gradient(135deg,var(--blue2),var(--teal));color:white;border:none;padding:10px 18px;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;white-space:nowrap;}
+.btn-ai:hover{opacity:0.85;}
+.btn-ai:disabled{opacity:0.5;cursor:not-allowed;}
+.ai-result{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:18px;margin-top:16px;font-size:13px;line-height:1.8;color:#a8b4d0;white-space:pre-wrap;display:none;}
+.ai-result.show{display:block;}
+.ai-export{background:rgba(255,255,255,0.04);color:var(--muted);border:1px solid var(--border);padding:9px 16px;border-radius:9px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;width:100%;margin-top:9px;}
+.ai-export:hover{background:rgba(255,255,255,0.08);color:var(--text);}
+
+
+/* BULK SELECT */
+.case-checkbox{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--faint);background:rgba(255,255,255,0.05);cursor:pointer;flex-shrink:0;transition:all 0.15s;margin-right:12px;}
+.case-checkbox:checked{background:var(--blue);border-color:var(--blue);}
+@media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}.proc-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:820px){.sidebar{display:none;}.main{margin-left:0;padding:18px;}.form-row,.proc-row,.profile-grid{grid-template-columns:1fr;}.outcome-stats-grid{grid-template-columns:1fr 1fr;}.stats-row{grid-template-columns:1fr 1fr;}.daily-grid{grid-template-columns:repeat(4,1fr);}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen" style="display:flex">
+  <div class="auth-card">
+    <div class="auth-logo">Pro<span>Log</span></div>
+    <div class="auth-tag">Fertility &amp; Gynaecology &middot; Clinical Case Logbook</div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+      <button class="tab-btn" onclick="switchTab('register')">Register</button>
+    </div>
+    <div id="auth-alert" class="alert alert-error"></div>
+    <div id="login-form">
+      <div class="field"><label>Username</label><input type="text" id="li-user" placeholder="your.username" autocomplete="username"/></div>
+      <div class="field"><label>Password</label><input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password"/></div>
+      <button class="btn btn-primary" onclick="doLogin()">Sign In →</button>
+    </div>
+    <div id="register-form" style="display:none">
+      <div class="form-row">
+        <div class="field"><label>First Name</label><input type="text" id="rg-first" placeholder="Jane" oninput="autoUsername()"/></div>
+        <div class="field"><label>Last Name</label><input type="text" id="rg-last" placeholder="Smith" oninput="autoUsername()"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Username</label><input type="text" id="rg-user" placeholder="jane.smith"/></div>
+        <div class="field"><label>Email</label><input type="email" id="rg-email" placeholder="jane@clinic.com"/></div>
+      </div>
+      <div class="field"><label>Password</label><input type="password" id="rg-pass" placeholder="min. 6 characters"/></div>
+      <button class="btn btn-primary" onclick="doRegister()">Create Account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <nav class="sidebar">
+    <div class="sidebar-logo"><div class="logo-dot"></div>Pro<span>Log</span></div>
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="goTo('dashboard')"><span class="nav-icon">◈</span>Dashboard</div>
+    <div class="nav-item" onclick="goTo('analytics')"><span class="nav-icon">◎</span>Analytics</div>
+    <div class="nav-label">Cases</div>
+    <div class="nav-item" onclick="goTo('cases')"><span class="nav-icon">⊡</span>All Cases</div>
+    <div class="nav-item" onclick="goTo('new-case')"><span class="nav-icon">⊕</span>New Case</div>
+    <div class="nav-label">Intelligence</div>
+    <div class="nav-item" onclick="goTo('ai')"><span class="nav-icon">✦</span>AI Patterns</div>
+    <div class="sidebar-footer">
+      <div class="user-chip" onclick="goTo('profile')">
+        <div class="user-avatar" id="sb-avatar">?</div>
+        <div class="user-meta"><div class="user-name" id="sb-name">—</div><div class="user-sub">My Profile</div></div>
+        <button class="btn-signout" onclick="event.stopPropagation();doLogout()" title="Sign out">⏻</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <div><div class="page-title" id="dash-greeting">Good morning</div><div class="page-sub" id="dash-date">Today's overview</div></div>
+        <button class="btn btn-glass btn-sm" onclick="goTo('new-case')" style="width:auto;margin-top:6px">+ New Case</button>
+      </div>
+      <div class="dash-filters">
+        <span class="filter-label">Filter:</span>
+        <input type="date" id="df-from" onchange="refreshDash()"/>
+        <span class="filter-label" style="color:var(--faint)">to</span>
+        <input type="date" id="df-to" onchange="refreshDash()"/>
+        <select id="df-cat" onchange="refreshDash()">
+          <option value="">All Categories</option>
+          <option value="Obstetrics">Obstetrics</option>
+          <option value="Gynaecology">Gynaecology</option>
+          <option value="ART">ART</option>
+        </select>
+        <button class="btn btn-glass btn-sm" onclick="clearDashFilters()" style="width:auto">Clear</button>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card" onclick="goTo('cases')"><div class="stat-glow sg-blue"></div><div class="stat-label">Total Cases</div><div class="stat-value" id="d-total">0</div><div class="stat-delta">all time</div></div>
+        <div class="stat-card" onclick="goTo('cases')"><div class="stat-glow sg-teal"></div><div class="stat-label">This Month</div><div class="stat-value" id="d-month">0</div><div class="stat-delta">cases logged</div></div>
+        <div class="stat-card" onclick="goToFiltered('Obstetrics')"><div class="stat-glow sg-amber"></div><div class="stat-label">Obstetrics</div><div class="stat-value" id="d-obs">0</div><div class="stat-delta">cases</div></div>
+        <div class="stat-card" onclick="goToFiltered('ART')"><div class="stat-glow sg-teal"></div><div class="stat-label">ART</div><div class="stat-value" id="d-art">0</div><div class="stat-delta">cases</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="card">
+          <div class="card-title">Pregnancy Checks <span class="card-badge" id="preg-check-count">0</span></div>
+          <div id="preg-check-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Cases by Category</div>
+          <div class="donut-wrap">
+            <svg width="120" height="120" viewBox="0 0 120 120" id="donut-svg"><circle cx="60" cy="60" r="46" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="20"/></svg>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent Cases <span class="card-badge" id="recent-count">0</span></div>
+          <div id="recent-list" style="cursor:pointer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div id="page-analytics" class="page">
+      <div class="page-header"><div><div class="page-title">Analytics</div><div class="page-sub">Weekly spread, procedure distribution &amp; outcome trends</div></div></div>
+      <div class="card">
+        <div class="card-title">Weekly Consult Spread</div>
+        <div class="week-nav">
+          <button class="btn-week" onclick="changeWeek(-1)">‹</button>
+          <div class="week-label" id="week-label">This Week</div>
+          <button class="btn-week" onclick="changeWeek(1)">›</button>
+        </div>
+        <div class="daily-grid" id="daily-grid"></div>
+      </div>
+      <div class="card"><div class="card-title">Consults — Last 8 Weeks</div><div class="bar-chart" id="weekly-bars"></div></div>
+      <div class="card"><div class="card-title">Outcome Tracking</div><div class="outcome-stats-grid" id="outcome-stats-grid"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="card"><div class="card-title">Category Distribution</div><div id="cat-dist"></div></div>
+        <div class="card"><div class="card-title">Obstetrics Breakdown</div><div id="obs-dist"></div></div>
+      </div>
+    </div>
+
+    <!-- ALL CASES -->
+    <div id="page-cases" class="page">
+      <div class="page-header">
+        <div><div class="page-title">Case History</div><div class="page-sub">All logged clinical cases</div></div>
+<!-- ART: Pregnant toggle -->
+        <div id="pregnant-section" style="display:none;margin-bottom:14px">
+          <div class="pregnant-toggle" id="pregnant-toggle" onclick="togglePregnant()">
+            <div class="pt-box"><span class="pt-icon">✓</span></div>
+            <div><div class="pt-label">Pregnant</div><div class="pt-desc">Retrospective flag — tick when pregnancy is confirmed</div></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <button class="btn btn-glass btn-sm" onclick="exportCSV()" style="width:auto">📤 Export CSV</button>
+          <button class="btn btn-glass btn-sm" onclick="exportExcel()" style="width:auto">📊 Export Excel</button>
+          <button class="btn btn-glass btn-sm" onclick="exportPDF()" style="width:auto">📄 Export PDF</button>
+          <button class="btn btn-primary btn-sm" onclick="goTo('new-case')" style="width:auto">+ New Case</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <input type="text" id="srch" placeholder="🔍  Search patient ID or notes…" oninput="renderCases()"/>
+        <select id="fcat" onchange="onCatFilter()">
+          <option value="">All Categories</option>
+          <option value="Obstetrics">Obstetrics</option>
+          <option value="Gynaecology">Gynaecology</option>
+          <option value="ART">ART</option>
+        </select>
+        <select id="fproc" onchange="renderCases()"><option value="">All Procedures</option></select>
+        <select id="fpreg" onchange="renderCases()">
+          <option value="">Any Outcome</option>
+          <option value="yes">Pregnant ✓</option>
+        </select>
+      </div>
+      <div id="bulk-actions" style="display:none;margin-bottom:14px;padding:12px;background:rgba(79,141,255,0.08);border:1px solid rgba(79,141,255,0.2);border-radius:10px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:600;color:var(--text)"><span id="sel-count">0</span> selected</span>
+          <button class="btn btn-rose btn-sm" onclick="bulkDelete()" style="width:auto">🗑 Delete Selected</button>
+          <button class="btn btn-glass btn-sm" onclick="deselectAll()" style="width:auto">Clear Selection</button>
+        </div>
+      </div>
+      <div class="case-list" id="cases-container"></div>
+      <div id="pagination" style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding-top:18px;border-top:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--muted)">Per page:</span>
+          <select id="per-page" onchange="renderCases()" style="padding:6px 10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);outline:none">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+        <div id="page-info" style="font-size:12px;color:var(--muted)"></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-glass btn-sm" id="prev-page" onclick="changePage(-1)" style="width:auto">‹ Prev</button>
+          <button class="btn btn-glass btn-sm" id="next-page" onclick="changePage(1)" style="width:auto">Next ›</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW / EDIT CASE -->
+    <div id="page-new-case" class="page">
+      <div class="page-header"><div><div class="page-title" id="form-title">New Case</div><div class="page-sub">Record clinical observations and outcomes</div></div></div>
+      <div class="card">
+        <div id="form-alert" class="alert"></div>
+
+        <!-- Patient + Date + Hospital -->
+        <div class="form-section">
+          <div class="form-section-title">Patient &amp; Encounter</div>
+          <div class="form-row">
+            <div class="field"><label>Patient ID (anonymised)</label><input type="text" id="f-pid" placeholder="e.g. PT-001"/></div>
+            <div class="field"><label>Date</label><input type="date" id="f-date"/></div>
+          </div>
+          <div class="field">
+            <label>Hospital</label>
+            <div class="hospital-wrap">
+              <input type="text" id="f-hospital" placeholder="Start typing hospital name…" autocomplete="off" oninput="showHospSuggestions()" onblur="hideHospSuggestions()"/>
+              <div class="hospital-suggestions" id="hosp-suggestions"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Procedure — 3 cascading dropdowns -->
+        <div class="form-section">
+          <div class="form-section-title">Procedure <span class="section-badge" id="proc-summary-badge" style="display:none"></span></div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Role</label>
+            <select id="f-role">
+              <option value="">Select role…</option>
+              <option value="Primary Operator">Primary Operator</option>
+              <option value="Assistant">Assistant</option>
+              <option value="Supervisor">Supervisor</option>
+            </select>
+          </div>
+          <div class="proc-row">
+            <div class="field"><label>Category</label>
+              <select id="f-cat" onchange="onProcCat()">
+                <option value="">Select category…</option>
+                <option value="ART">ART</option>
+                <option value="Gynaecology">Gynaecology</option>
+                <option value="Obstetrics">Obstetrics</option>
+              </select>
+            </div>
+            <div class="field" id="f-type-wrap" style="display:none"><label>Type</label>
+              <select id="f-type" onchange="onProcType()"><option value="">Select type…</option></select>
+            </div>
+            <div class="field" id="f-proc-wrap" style="display:none"><label>Procedure</label>
+              <select id="f-proc" onchange="onProcProc()"><option value="">Select procedure…</option></select>
+            </div>
+            <div class="field" id="f-detail-wrap" style="display:none"><label>Detail</label>
+              <select id="f-detail" onchange="onProcDetail()"><option value="">Select detail…</option></select>
+            </div>
+          </div>
+          <!-- Caesarean extra fields -->
+          <div id="caesar-extra" class="caesar-fields" style="display:none">
+            <div class="form-section-title">Caesarean Details</div>
+            <div class="form-row">
+              <div class="field"><label>Previous Caesarean Sections</label><input type="number" id="f-prev-cs" min="0" max="10" placeholder="0" style="max-width:100px"/></div>
+              <div class="field" style="display:flex;align-items:flex-end;padding-bottom:2px">
+                <div class="sterilisation-toggle" id="steril-toggle" onclick="toggleSterilisation()">
+                  <input type="checkbox" id="f-steril"/>
+                  <div class="st-box"><span class="st-icon">✓</span></div>
+                  <span class="st-label">Sterilisation performed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Cerclage other text -->
+          <div id="other-text-wrap" class="field" style="display:none;margin-top:12px">
+            <label>Specify (Other)</label>
+            <input type="text" id="f-other-text" placeholder="Please specify…"/>
+          </div>
+        </div>
+
+        <!-- ART: Oocyte Collection Fields -->
+        <div id="oocyte-fields" class="form-section" style="display:none">
+          <div class="form-section-title" style="color:var(--teal)">Oocyte Collection Details</div>
+          <div class="form-row">
+            <div class="field">
+              <label>Trigger</label>
+              <select id="f-oo-trigger" onchange="onTriggerChange()">
+                <option value="">Select trigger…</option>
+                <option value="Ovidrel">Ovidrel</option>
+                <option value="Decapeptyl">Decapeptyl</option>
+                <option value="Dual">Dual</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Hours</label>
+              <select id="f-oo-hours">
+                <option value="">Select hours…</option>
+                <option value="0">0</option>
+                <option value="0.5">0.5</option>
+                <option value="1">1</option>
+                <option value="1.5">1.5</option>
+                <option value="2">2</option>
+                <option value="2.5">2.5</option>
+                <option value="3">3</option>
+                <option value="3.5">3.5</option>
+                <option value="4">4</option>
+                <option value="4.5">4.5</option>
+                <option value="5">5</option>
+                <option value="5.5">5.5</option>
+                <option value="6">6</option>
+                <option value="6.5">6.5</option>
+                <option value="7">7</option>
+                <option value="7.5">7.5</option>
+                <option value="8">8</option>
+                <option value="8.5">8.5</option>
+                <option value="9">9</option>
+                <option value="9.5">9.5</option>
+                <option value="10">10</option>
+                <option value="10.5">10.5</option>
+                <option value="11">11</option>
+                <option value="11.5">11.5</option>
+                <option value="12">12</option>
+                <option value="12.5">12.5</option>
+                <option value="13">13</option>
+                <option value="13.5">13.5</option>
+                <option value="14">14</option>
+                <option value="14.5">14.5</option>
+                <option value="15">15</option>
+                <option value="15.5">15.5</option>
+                <option value="16">16</option>
+                <option value="16.5">16.5</option>
+                <option value="17">17</option>
+                <option value="17.5">17.5</option>
+                <option value="18">18</option>
+                <option value="18.5">18.5</option>
+                <option value="19">19</option>
+                <option value="19.5">19.5</option>
+                <option value="20">20</option>
+                <option value="20.5">20.5</option>
+                <option value="21">21</option>
+                <option value="21.5">21.5</option>
+                <option value="22">22</option>
+                <option value="22.5">22.5</option>
+                <option value="23">23</option>
+                <option value="23.5">23.5</option>
+                <option value="24">24</option>
+              </select>
+            </div>
+          </div>
+          <div class="field" id="trigger-other-wrap" style="display:none">
+            <label>Trigger (Other)</label>
+            <input type="text" id="f-oo-trigger-other" placeholder="Specify trigger…"/>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Follicles</label>
+              <input type="number" id="f-oo-follicles" min="0" placeholder="0"/>
+            </div>
+            <div class="field">
+              <label>Eggs Retrieved</label>
+              <input type="number" id="f-oo-eggs" min="0" placeholder="0"/>
+            </div>
+          </div>
+          <div class="field" style="max-width:200px">
+            <div class="sterilisation-toggle" id="la-toggle" onclick="toggleLA()">
+              <input type="checkbox" id="f-la"/>
+              <div class="st-box"><span class="st-icon">✓</span></div>
+              <span class="st-label">Local Anaesthetic (LA)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ART: Embryo Transfer Fields -->
+        <div id="et-fields" class="form-section" style="display:none">
+          <div class="form-section-title" style="color:var(--teal)">Embryo Transfer Details</div>
+          <div class="field" style="max-width:200px">
+            <label>Number of Embryos Transferred</label>
+            <input type="number" id="f-et-number" min="0" max="10" placeholder="0"/>
+          </div>
+        </div>
+
+        <!-- Gynaecology: Termination of Pregnancy Gestation -->
+        <div id="top-gestation-section" class="form-section" style="display:none">
+          <div class="form-section-title" style="color:var(--violet)">Termination Details</div>
+          <div class="field" style="max-width:200px">
+            <label>Gestation (weeks)</label>
+            <input type="number" id="f-top-gestation" min="0" max="50" placeholder="0"/>
+          </div>
+        </div>
+
+        <!-- Gynaecology: Cystoscopy Ureteric Catheterisation -->
+        <div id="cystoscopy-section" class="form-section" style="display:none">
+          <div class="form-section-title" style="color:var(--violet)">Cystoscopy Details</div>
+          <div class="field">
+            <div class="sterilisation-toggle" id="ureteric-toggle" onclick="toggleUreteric()">
+              <input type="checkbox" id="f-ureteric"/>
+              <div class="st-box"><span class="st-icon">✓</span></div>
+              <span class="st-label">Ureteric Catheterisation</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clinical Notes -->
+        <div class="form-section" id="notes-section">
+          <div class="form-section-title">Clinical Notes</div>
+          <div class="field">
+            <textarea id="f-obs" placeholder="Document clinical findings, symptoms, procedures…" style="min-height:140px"></textarea>
+          </div>
+        </div>
+
+        <!-- Obstetrics: Complications -->
+        <div class="form-section" id="complications-section" style="display:none">
+          <div class="form-section-title" style="color:var(--rose)">Complications</div>
+          <div class="comp-grid">
+            <div class="comp-check" id="cc-pph" onclick="toggleComp('pph')"><input type="checkbox" id="cb-pph"/><div class="chk-box"><span class="chk-icon">✓</span></div><span class="chk-label">PPH</span></div>
+            <div class="comp-check" id="cc-shoulder" onclick="toggleComp('shoulder')"><input type="checkbox" id="cb-shoulder"/><div class="chk-box"><span class="chk-icon">✓</span></div><span class="chk-label">Shoulder Dystocia</span></div>
+            <div class="comp-check" id="cc-ph" onclick="toggleComp('ph')"><input type="checkbox" id="cb-ph"/><div class="chk-box"><span class="chk-icon">✓</span></div><span class="chk-label">pH &lt; 7</span></div>
+            <div class="comp-check" id="cc-tear3" onclick="toggleComp('tear3')"><input type="checkbox" id="cb-tear3"/><div class="chk-box"><span class="chk-icon">✓</span></div><span class="chk-label">3rd Degree Tear</span></div>
+            <div class="comp-check" id="cc-other-comp" onclick="toggleComp('otherComp')"><input type="checkbox" id="cb-otherComp"/><div class="chk-box"><span class="chk-icon">✓</span></div><span class="chk-label">Other</span></div>
+          </div>
+          <div class="field" id="other-comp-text-wrap" style="display:none;margin-top:10px">
+            <label>Specify other complication</label>
+            <input type="text" id="f-other-comp-text" placeholder="Describe complication…"/>
+          </div>
+        </div>
+
+
+
+
+
+
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <button class="btn btn-primary" onclick="saveCase()" style="flex:1" id="save-btn">Save Case</button>
+          <button class="btn btn-glass" onclick="cancelEdit()" id="cancel-btn" style="display:none;width:auto">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI -->
+    <div id="page-ai" class="page">
+      <div class="page-header"><div><div class="page-title">AI Pattern Analysis</div><div class="page-sub">Identify trends across your caseload using Claude</div></div></div>
+      <div class="ai-panel">
+        <div class="ai-orb"></div>
+        <div class="ai-title">✦ Claude Analysis</div>
+        <div class="ai-sub">Direct analysis via API key, or export prompt for Claude.ai</div>
+        <div class="ai-key-row">
+          <input type="password" id="ai-key" placeholder="sk-ant-api… (optional — works when hosted on server)"/>
+          <button class="btn-ai" onclick="saveKey()">Save</button>
+        </div>
+        <button class="btn-ai" id="run-btn" onclick="runAI()" style="width:100%;margin-bottom:9px">✦ Analyse Patterns</button>
+        <button class="ai-export" onclick="exportAI()">📋 Export prompt for Claude.ai</button>
+        <div class="ai-result" id="ai-out"></div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="page-profile" class="page">
+      <div class="page-header"><div><div class="page-title">My Profile</div><div class="page-sub">Update your details and manage qualifications</div></div></div>
+      <div id="profile-alert" class="alert"></div>
+      <div class="profile-grid">
+        <div>
+          <div class="card">
+            <div class="card-title">Personal Details</div>
+            <div class="form-row">
+              <div class="field"><label>First Name</label><input type="text" id="p-first" placeholder="Jane"/></div>
+              <div class="field"><label>Last Name</label><input type="text" id="p-last" placeholder="Smith"/></div>
+            </div>
+            <div class="field"><label>Email</label><input type="email" id="p-email" placeholder="jane@clinic.com"/></div>
+            <div class="field"><label>Username</label><input type="text" id="p-user" placeholder="jane.smith"/></div>
+            <div class="field"><label>Title / Role</label><input type="text" id="p-role" placeholder="e.g. Consultant Obstetrician"/></div>
+            <button class="btn btn-teal btn-sm" onclick="saveProfile()" style="width:auto;margin-top:6px">Save Changes</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Change Password</div>
+            <div class="field"><label>Current Password</label><input type="password" id="p-cur-pass" placeholder="Current password"/></div>
+            <div class="field"><label>New Password</label><input type="password" id="p-new-pass" placeholder="New password (min. 6 chars)"/></div>
+            <div class="field"><label>Confirm New Password</label><input type="password" id="p-confirm-pass" placeholder="Confirm new password"/></div>
+            <button class="btn btn-primary btn-sm" onclick="changePassword()" style="width:auto">Update Password</button>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">Qualifications &amp; Certificates</div>
+            <div id="qual-list" style="margin-bottom:16px"></div>
+            <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div class="form-section-title" style="margin-bottom:12px">Add New</div>
+              <div class="field"><label>Qualification / Certificate Name</label><input type="text" id="q-name" placeholder="e.g. MRCOG Part 2"/></div>
+              <div class="field"><label>Date Obtained</label><input type="date" id="q-date"/></div>
+              <button class="btn btn-glass btn-sm" onclick="addQual()" style="width:auto">+ Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CASE MODAL -->
+<div class="modal-overlay" id="case-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-pid">—</div>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+    <div style="display:flex;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid var(--border)">
+      <button class="btn btn-glass btn-sm" onclick="editModal()" style="width:auto">✏️ Edit</button>
+      <button class="btn btn-rose btn-sm" onclick="deleteModal()" style="width:auto">🗑 Delete</button>
+      <button class="btn btn-glass btn-sm" onclick="closeModal()" style="margin-left:auto;width:auto">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// PROCEDURE TREE  — 4 levels:
+// Level 1: Category   (Obstetrics / Gynaecology / ART)
+// Level 2: Type       (Antenatal / Intrapartum / Postnatal)
+// Level 3: Procedure  (Vaginal Birth / Caesarean Section / …)
+// Level 4: Detail     (SVD / Vacuum / Uncomplicated / …)  — null means no L4
+//
+// Structure: { Cat: { Type: { Procedure: [details] | null } } }
+// ═══════════════════════════════════════════════
+const PROC = {
+  Obstetrics: {
+    Antenatal: {
+      'ECV': null,
+      'Cervical Cerclage': null
+    },
+    Intrapartum: {
+      'Vaginal Birth': ['SVD','Vacuum','Forceps'],
+      'Caesarean Section': ['Uncomplicated','Placenta Praevia','Classical','Multiple Pregnancy','Abnormal Presentation','Fully Dilated','BMI > 50','Other']
+    },
+    Postnatal: {
+      'Perineal Repair': ['Episiotomy / 2nd Degree Tear','3rd / 4th Degree Tear'],
+      'Management of PPH': ['General','Bakri Balloon','B Lynch Suture','Other'],
+      'MROP': null
+    }
+  },
+  Gynaecology: {
+    'Hysteroscopy': {
+      'Diagnostic': null,
+      'Endometrial Polyp': {
+        'D&C/Polyp Forceps': null,
+        'Myosure': null,
+        'Resectoscope': null
+      },
+      'Fibroids': {
+        'D&C/Polyp Forceps': null,
+        'Myosure': null,
+        'Resectoscope': null
+      },
+      'Abnormal Uterine Anatomy': {
+        'Septum': null,
+        'Scar Niche': null
+      },
+      'Endometrial Ablation': {
+        'Novasure': null,
+        'Cavaterm': null,
+        'Resectoscope': null
+      },
+      'Other': null
+    },
+    'Laparoscopy': {
+      'Diagnostic': null,
+      'Tubal Surgery': {
+        'Salpingectomy': null,
+        'Salpingostomy': null,
+        'Tubal Ligation': null
+      },
+      'Ovarian Surgery': {
+        'Detorsion': null,
+        'Cyst Aspiration': null,
+        'Cystectomy': null,
+        'Oophorectomy': null
+      },
+      'Endometriosis': null,
+      'Myomectomy': null,
+      'Hysterectomy': {
+        'Subtotal': null,
+        'Total': null,
+        'Vaginal Assisted': null
+      },
+      'Other': null
+    },
+    'Laparotomy': {
+      'Tubal Surgery': null,
+      'Ovarian Surgery': null,
+      'Hysterectomy': null,
+      'Myomectomy': null
+    },
+    'Cervical Surgery': {
+      'LLETZ': null,
+      'Cone Biopsy': null
+    },
+    'Urogynaecology': {
+      'TVT': null,
+      'Other': null
+    },
+    'Vaginal Surgery': {
+      'Anterior Repair': null,
+      'Posterior Repair': null,
+      'Vaginal Hysterectomy': null,
+      'SSF': null,
+      'Other': null
+    },
+    'Perineal Surgery': {
+      "Batholin's Cyst": null,
+      'Vulval Biopsy or Excision': null,
+      'I&D': null,
+      'Perineoplasty': null,
+      'Other': null
+    },
+    'Contraception': {
+      'Complex IUD Removal': null,
+      'Complex Implanon Removal': null,
+      'Insertion of IUD': null,
+      'Insertion of Implanon': null
+    },
+    'Pregnancy Management': {
+      'Suction D&C for Miscarriage': null,
+      'Termination of Pregnancy': {
+        'Medical': null,
+        'Surgical': null
+      }
+    },
+    'Cystoscopy': null,
+    'Surgical Wound Debridement': null
+  },
+  ART: {
+    'Oocyte Collection': {
+      'Transvaginal Oocyte Collection': null,
+      'Transabdominal Oocyte Collection': null
+    },
+    'Embryo Transfer': null,
+    'Male Reproductive Surgery': {
+      'Open Testicular Biopsy': null,
+      'PESA': null,
+      'TESA': null,
+      'Microsurgical Sperm Retrieval': null
+    }
+  }
+};
+
+// ═══════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════
+const S = {
+  users(){return JSON.parse(localStorage.getItem('pl_u')||'[]');},
+  setUsers(u){localStorage.setItem('pl_u',JSON.stringify(u));},
+  session(){return JSON.parse(localStorage.getItem('pl_s')||'null');},
+  setSession(s){localStorage.setItem('pl_s',JSON.stringify(s));},
+  clearSession(){localStorage.removeItem('pl_s');},
+  cases(uid){return JSON.parse(localStorage.getItem('pl_c_'+uid)||'[]');},
+  setCases(uid,c){localStorage.setItem('pl_c_'+uid,JSON.stringify(c));},
+  hospitals(uid){return JSON.parse(localStorage.getItem('pl_h_'+uid)||'[]');},
+  setHospitals(uid,h){localStorage.setItem('pl_h_'+uid,JSON.stringify(h));},
+  quals(uid){return JSON.parse(localStorage.getItem('pl_q_'+uid)||'[]');},
+  setQuals(uid,q){localStorage.setItem('pl_q_'+uid,JSON.stringify(q));},
+  aiKey(){return localStorage.getItem('pl_ak')||'';},
+  setAiKey(k){localStorage.setItem('pl_ak',k);}
+};
+
+
+// Clear old imported data on first load of new version
+function resetOldData(){
+  const resetFlag=localStorage.getItem('pl_reset_v2');
+  if(!resetFlag){
+    // Clear all case data for all users
+    const keys=Object.keys(localStorage);
+    keys.forEach(k=>{
+      if(k.startsWith('pl_c_')||k.startsWith('cl_c_')) localStorage.removeItem(k);
+    });
+    localStorage.setItem('pl_reset_v2','1');
+    console.log('Old case data cleared');
+  }
+}
+
+
+
+const catBadge = {Obstetrics:'b-obs',Gynaecology:'b-gyn',ART:'b-art'};
+const catColors = {Obstetrics:'var(--amber)',Gynaecology:'var(--violet)',ART:'var(--teal)'};
+const donutColors = ['var(--amber)','var(--teal)','var(--violet)','var(--rose)','var(--blue)','var(--green)'];
+
+let user=null, editId=null, modalId=null, weekOffset=0;
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(t==='login'&&i===0)||(t==='register'&&i===1)));
+  document.getElementById('login-form').style.display=t==='login'?'block':'none';
+  document.getElementById('register-form').style.display=t==='register'?'block':'none';
+  document.getElementById('auth-alert').classList.remove('show');
+}
+function showAuthErr(m){const e=document.getElementById('auth-alert');e.textContent=m;e.classList.add('show');}
+function hash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);return(h>>>0).toString(16);}
+
+function autoUsername(){
+  const f=document.getElementById('rg-first').value.trim().toLowerCase().replace(/\s+/g,'');
+  const l=document.getElementById('rg-last').value.trim().toLowerCase().replace(/\s+/g,'');
+  if(f||l) document.getElementById('rg-user').value=[f,l].filter(Boolean).join('.');
+}
+
+function doLogin(){
+  const u=document.getElementById('li-user').value.trim();
+  const p=document.getElementById('li-pass').value;
+  if(!u||!p) return showAuthErr('Please fill in both fields.');
+  const f=S.users().find(x=>x.username===u);
+  if(!f||f.ph!==hash(p)) return showAuthErr('Invalid username or password.');
+  S.setSession({id:f.id,username:f.username,fullName:f.fullName});
+  bootApp(f);
+}
+
+function doRegister(){
+  const first=document.getElementById('rg-first').value.trim();
+  const last=document.getElementById('rg-last').value.trim();
+  const u=document.getElementById('rg-user').value.trim().toLowerCase();
+  const e=document.getElementById('rg-email').value.trim().toLowerCase();
+  const p=document.getElementById('rg-pass').value;
+  if(!first||!last||!u||!e||!p) return showAuthErr('Please fill in all fields.');
+  if(p.length<6) return showAuthErr('Password must be at least 6 characters.');
+  const users=S.users();
+  if(users.find(x=>x.username===u)) return showAuthErr('Username already taken.');
+  if(users.find(x=>x.email===e)) return showAuthErr('Email already registered.');
+  const nu={id:Date.now().toString(),fullName:first+' '+last,firstName:first,lastName:last,username:u,email:e,ph:hash(p),role:''};
+  users.push(nu);S.setUsers(users);
+  S.setSession({id:nu.id,username:nu.username,fullName:nu.fullName});
+  bootApp(nu);
+}
+
+function doLogout(){S.clearSession();user=null;location.reload();}
+
+function bootApp(u){
+  resetOldData();
+  user=u;
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app-screen').style.display='block';
+  const ini=(u.fullName||u.username).split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('sb-avatar').textContent=ini;
+  document.getElementById('sb-name').textContent=u.fullName||u.username;
+  const hr=new Date().getHours();
+  document.getElementById('dash-greeting').textContent=(hr<12?'Good morning':hr<17?'Good afternoon':'Good evening')+', '+(u.fullName||u.username).split(' ')[0];
+  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const sk=S.aiKey();if(sk)document.getElementById('ai-key').value=sk;
+  document.getElementById('f-date').valueAsDate=new Date();
+  goTo('dashboard');
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function goTo(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const ni=document.querySelector('.nav-item[onclick*="\''+id+'\'"]');
+  if(ni) ni.classList.add('active');
+  else if(id==='profile'){
+    // highlight profile via sidebar footer
+  }
+  if(id==='dashboard') refreshDash();
+  if(id==='analytics'){weekOffset=0;renderAnalytics();}
+  if(id==='cases') renderCases();
+  if(id==='new-case'&&!editId) resetForm();
+  if(id==='profile') loadProfile();
+}
+
+function goToFiltered(cat){
+  document.getElementById('fcat').value=cat;
+  onCatFilter();
+  goTo('cases');
+}
+
+// ═══════════════════════════════════════════════
+// PROCEDURE CASCADING DROPDOWNS
+// ═══════════════════════════════════════════════
+// ─── Cascade helpers ───────────────────────────
+function resetFrom(level){
+  // level: 2=type, 3=proc, 4=detail, 5=caesar/other extras
+  if(level<=2){
+    document.getElementById('f-type').innerHTML='<option value="">Select type…</option>';
+    document.getElementById('f-type-wrap').style.display='none';
+  }
+  if(level<=3){
+    document.getElementById('f-proc').innerHTML='<option value="">Select procedure…</option>';
+    document.getElementById('f-proc-wrap').style.display='none';
+  }
+  if(level<=4){
+    document.getElementById('f-detail').innerHTML='<option value="">Select detail…</option>';
+    document.getElementById('f-detail-wrap').style.display='none';
+  }
+  document.getElementById('caesar-extra').style.display='none';
+  document.getElementById('other-text-wrap').style.display='none';
+  document.getElementById('complications-section').style.display='none';
+  document.getElementById('pregnant-section').style.display='none';
+  document.getElementById('oocyte-fields').style.display='none';
+  document.getElementById('et-fields').style.display='none';
+  updateProcBadge();
+}
+
+// L1 → L2: Category chosen, populate Type
+function onProcCat(){
+  const cat=document.getElementById('f-cat').value;
+  resetFrom(2);
+  if(!cat||!PROC[cat]) return;
+  const fType=document.getElementById('f-type');
+  Object.keys(PROC[cat]).forEach(t=>{
+    const o=document.createElement('option');o.value=t;o.textContent=t;fType.appendChild(o);
+  });
+  document.getElementById('f-type-wrap').style.display='block';
+  if(cat==='Obstetrics') document.getElementById('complications-section').style.display='block';
+  updateProcBadge();
+}
+
+// L2 → L3: Type chosen, populate Procedure
+function onProcType(){
+  const cat=document.getElementById('f-cat').value;
+  const type=document.getElementById('f-type').value;
+  resetFrom(3);
+  if(cat==='Obstetrics') document.getElementById('complications-section').style.display='block';
+  if(cat==='ART')        document.getElementById('pregnant-section').style.display='block';
+  if(!cat||!type||!PROC[cat]||!PROC[cat][type]) return;
+  const fProc=document.getElementById('f-proc');
+  Object.keys(PROC[cat][type]).sort((a,b)=>a.localeCompare(b)).forEach(p=>{
+    const o=document.createElement('option');o.value=p;o.textContent=p;fProc.appendChild(o);
+  });
+  document.getElementById('f-proc-wrap').style.display='block';
+  updateProcBadge();
+}
+
+// L3 → L4: Procedure chosen, populate Detail (if any)
+function onProcProc(){
+  const cat=document.getElementById('f-cat').value;
+  const type=document.getElementById('f-type').value;
+  const proc=document.getElementById('f-proc').value;
+  // Reset only L4 and extras
+  document.getElementById('f-detail').innerHTML='<option value="">Select detail…</option>';
+  document.getElementById('f-detail-wrap').style.display='none';
+  document.getElementById('caesar-extra').style.display='none';
+  document.getElementById('other-text-wrap').style.display='none';
+  document.getElementById('oocyte-fields').style.display='none';
+  document.getElementById('et-fields').style.display='none';
+  updateProcBadge();
+  if(!cat||!type||!proc) return;
+  const details=PROC[cat]?.[type]?.[proc];
+  if(Array.isArray(details)&&details.length>0){
+    const fDetail=document.getElementById('f-detail');
+    [...details].sort((a,b)=>a.localeCompare(b)).forEach(d=>{
+      const o=document.createElement('option');o.value=d;o.textContent=d;fDetail.appendChild(o);
+    });
+    document.getElementById('f-detail-wrap').style.display='block';
+  }
+  // Caesarean always shows the extra panel (prev CS + sterilisation)
+  if(proc==='Caesarean Section'){
+    document.getElementById('caesar-extra').style.display='block';
+  }
+  // ART: Oocyte Collection fields
+  if(proc==='Transvaginal Oocyte Collection'||proc==='Transabdominal Oocyte Collection'){
+    document.getElementById('oocyte-fields').style.display='block';
+  }
+  // ART: Embryo Transfer fields + pregnant toggle (only when ET is specifically selected)
+  if(proc==='Embryo Transfer'){
+    document.getElementById('et-fields').style.display='block';
+    document.getElementById('pregnant-section').style.display='block';
+  }
+  // Hide ET fields for other procedures
+  if(proc!=='Embryo Transfer'){
+    document.getElementById('et-fields').style.display='none';
+    document.getElementById('pregnant-section').style.display='none';
+  }
+}
+
+// L4: Detail chosen — show "Other" text box if needed
+function onProcDetail(){
+  const detail=document.getElementById('f-detail').value;
+  document.getElementById('other-text-wrap').style.display=detail==='Other'?'block':'none';
+  updateProcBadge();
+}
+
+function updateProcBadge(){
+  const cat   = document.getElementById('f-cat')?.value    || '';
+  const type  = document.getElementById('f-type')?.value   || '';
+  const proc  = document.getElementById('f-proc')?.value   || '';
+  const detail= document.getElementById('f-detail')?.value || '';
+  const badge = document.getElementById('proc-summary-badge');
+  const parts = [cat,type,proc,detail].filter(Boolean);
+  if(parts.length){badge.textContent=parts.join(' › ');badge.style.display='inline-block';}
+  else{badge.style.display='none';}
+}
+
+function toggleComp(id){
+  const cb=document.getElementById('cb-'+id);
+  const el=document.getElementById('cc-'+id);
+  cb.checked=!cb.checked;
+  el.classList.toggle('checked',cb.checked);
+  if(id==='otherComp'){
+    document.getElementById('other-comp-text-wrap').style.display=cb.checked?'block':'none';
+  }
+}
+
+function toggleSterilisation(){
+  const el=document.getElementById('steril-toggle');
+  const cb=document.getElementById('f-steril');
+  cb.checked=!cb.checked;
+  el.classList.toggle('checked',cb.checked);
+}
+
+
+
+function onTriggerChange(){
+  const val=document.getElementById('f-oo-trigger').value;
+  document.getElementById('trigger-other-wrap').style.display=val==='Other'?'block':'none';
+}
+
+function toggleLA(){
+  const el=document.getElementById('la-toggle');
+  const cb=document.getElementById('f-la');
+  cb.checked=!cb.checked;
+  el.classList.toggle('checked',cb.checked);
+}
+
+function togglePregnant(){
+  const el=document.getElementById('pregnant-toggle');
+  el.classList.toggle('checked');
+}
+
+function getComplications(){
+  const ids=['pph','shoulder','ph','tear3','otherComp'];
+  const active=ids.filter(id=>document.getElementById('cb-'+id)?.checked);
+  const result=active.map(id=>{
+    if(id==='otherComp') return 'Other: '+document.getElementById('f-other-comp-text').value;
+    const labels={pph:'PPH',shoulder:'Shoulder Dystocia',ph:'pH < 7',tear3:'3rd Degree Tear'};
+    return labels[id]||id;
+  });
+  return result;
+}
+
+function setComplications(comps=[]){
+  const map={PPH:'pph','Shoulder Dystocia':'shoulder','pH < 7':'ph','3rd Degree Tear':'tear3'};
+  ['pph','shoulder','ph','tear3','otherComp'].forEach(id=>{
+    const cb=document.getElementById('cb-'+id);
+    const el=document.getElementById('cc-'+id);
+    if(cb&&el){cb.checked=false;el.classList.remove('checked');}
+  });
+  document.getElementById('other-comp-text-wrap').style.display='none';
+  comps.forEach(c=>{
+    const key=map[c];
+    if(key){
+      document.getElementById('cb-'+key).checked=true;
+      document.getElementById('cc-'+key).classList.add('checked');
+    } else if(c.startsWith('Other:')){
+      document.getElementById('cb-otherComp').checked=true;
+      document.getElementById('cc-otherComp').classList.add('checked');
+      document.getElementById('f-other-comp-text').value=c.replace('Other:','').trim();
+      document.getElementById('other-comp-text-wrap').style.display='block';
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// HOSPITAL AUTOCOMPLETE
+// ═══════════════════════════════════════════════
+function getHospitals(){return S.hospitals(user.id);}
+
+function addHospital(name){
+  const h=getHospitals();
+  if(!h.includes(name)){h.push(name);S.setHospitals(user.id,h);}
+}
+
+function showHospSuggestions(){
+  const val=document.getElementById('f-hospital').value.toLowerCase();
+  const all=getHospitals();
+  const matches=all.filter(h=>h.toLowerCase().includes(val));
+  const box=document.getElementById('hosp-suggestions');
+  if(!val||matches.length===0){box.classList.remove('show');return;}
+  box.innerHTML=matches.map(h=>'<div class="hosp-opt" onmousedown="selectHosp(\''+escAttr(h)+'\')">'+esc(h)+'</div>').join('');
+  box.classList.add('show');
+}
+
+function hideHospSuggestions(){
+  setTimeout(()=>document.getElementById('hosp-suggestions').classList.remove('show'),200);
+}
+
+function selectHosp(name){
+  document.getElementById('f-hospital').value=name;
+  document.getElementById('hosp-suggestions').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════
+// CASE SAVE / EDIT
+// ═══════════════════════════════════════════════
+function getCases(){return S.cases(user.id);}
+function setCases(c){S.setCases(user.id,c);}
+
+function getProcLabel(){
+  const cat   = document.getElementById('f-cat')?.value    || '';
+  const type  = document.getElementById('f-type')?.value   || '';
+  const proc  = document.getElementById('f-proc')?.value   || '';
+  const detail= document.getElementById('f-detail')?.value || '';
+  const other = document.getElementById('f-other-text')?.value || '';
+  // If detail is "Other" and there's free text, substitute it
+  const detailFinal = detail==='Other' ? (other||'Other') : detail;
+  return {cat, type, proc, detail: detailFinal};
+}
+
+
+function calculateCheckDate(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()+14);
+  return d.toISOString().slice(0,10);
+}
+
+function saveCase(){
+  const pid=document.getElementById('f-pid').value.trim();
+  const date=document.getElementById('f-date').value;
+  const hospital=document.getElementById('f-hospital').value.trim();
+  const {cat,type,proc,detail}=getProcLabel();
+  const role=document.getElementById('f-role').value;
+  const obs=document.getElementById('f-obs').value.trim();
+  const out='';
+  const pregnant=document.getElementById('pregnant-toggle')?.classList.contains('checked')||false;
+  const complications=cat==='Obstetrics'?getComplications():[];
+  const prevCS=proc==='Caesarean Section'?parseInt(document.getElementById('f-prev-cs').value)||0:null;
+  const steril=proc==='Caesarean Section'?document.getElementById('f-steril').checked:false;
+  
+  // ART: Oocyte Collection fields
+  const oocyteData=(proc==='Transvaginal Oocyte Collection'||proc==='Transabdominal Oocyte Collection')?{
+    trigger:(function(){
+      const t=document.getElementById('f-oo-trigger').value;
+      return t==='Other'?document.getElementById('f-oo-trigger-other').value.trim():t;
+    })(),
+    hours:parseFloat(document.getElementById('f-oo-hours').value)||0,
+    follicles:parseInt(document.getElementById('f-oo-follicles').value)||0,
+    eggsRetrieved:parseInt(document.getElementById('f-oo-eggs').value)||0,
+    la:document.getElementById('f-la').checked
+  }:null;
+  
+  // ART: Embryo Transfer fields + pregnancy check reminder
+  const isET=(type==='Embryo Transfer')||(proc==='Embryo Transfer');
+  const etData=isET?{
+    embryosTransferred:parseInt(document.getElementById('f-et-number').value)||0
+  }:null;
+  const pregnancyCheckDate=isET?calculateCheckDate(date):null;
+
+  // Validation: proc is optional for terminal types like Embryo Transfer
+  const needsProc=PROC[cat]&&PROC[cat][type]!==null;
+  if(!pid||!date||!cat||!type||(needsProc&&!proc)){
+    showFormAlert('Please fill in Patient ID, Date, and all required Procedure fields.','error');return;
+  }
+
+  if(hospital) addHospital(hospital);
+
+  const cases=getCases();const now=new Date().toISOString();
+  const rec={id:editId||Date.now().toString(),pid,date,hospital,role,cat,type,proc,detail,obs,out,pregnant,complications,prevCS,steril,created:now,updated:now};
+  if(editId){
+    const i=cases.findIndex(c=>c.id===editId);
+    if(i>=0) cases[i]={...cases[i],...rec,created:cases[i].created};
+  } else {
+    cases.unshift(rec);
+  }
+  setCases(cases);
+  showFormAlert(editId?'Case updated successfully.':'Case saved successfully.','success');
+  editId=null;resetForm();
+}
+
+function showFormAlert(msg,type){
+  const a=document.getElementById('form-alert');
+  a.textContent=msg;a.className='alert alert-'+(type==='error'?'error':'success')+' show';
+  setTimeout(()=>a.classList.remove('show'),3500);
+}
+
+function resetForm(){
+  document.getElementById('f-pid').value='';
+  document.getElementById('f-date').valueAsDate=new Date();
+  document.getElementById('f-hospital').value='';
+  document.getElementById('f-cat').value='';
+  document.getElementById('f-role').value='';
+  document.getElementById('f-type').innerHTML='<option value="">Select type…</option>';
+  document.getElementById('f-proc').innerHTML='<option value="">Select procedure…</option>';
+  document.getElementById('f-detail').innerHTML='<option value="">Select detail…</option>';
+  document.getElementById('f-type-wrap').style.display='none';
+  document.getElementById('f-proc-wrap').style.display='none';
+  document.getElementById('f-detail-wrap').style.display='none';
+  document.getElementById('f-obs').value='';
+  document.getElementById('caesar-extra').style.display='none';
+  document.getElementById('other-text-wrap').style.display='none';
+  document.getElementById('f-other-text').value='';
+  document.getElementById('complications-section').style.display='none';
+  document.getElementById('pregnant-section').style.display='none';
+  document.getElementById('pregnant-toggle').classList.remove('checked');
+  document.getElementById('f-prev-cs').value='';
+  document.getElementById('f-steril').checked=false;
+  document.getElementById('steril-toggle').classList.remove('checked');
+  document.getElementById('f-oo-trigger').value='';
+  document.getElementById('f-oo-trigger-other').value='';
+  document.getElementById('trigger-other-wrap').style.display='none';
+  document.getElementById('f-oo-hours').value='';
+  document.getElementById('f-oo-follicles').value='';
+  document.getElementById('f-oo-eggs').value='';
+  document.getElementById('f-la').checked=false;
+  document.getElementById('la-toggle').classList.remove('checked');
+  document.getElementById('f-et-number').value='';
+  document.getElementById('et-pregnant-toggle').classList.remove('checked');
+  setComplications([]);
+  document.getElementById('proc-summary-badge').style.display='none';
+  document.getElementById('form-title').textContent='New Case';
+  document.getElementById('save-btn').textContent='Save Case';
+  document.getElementById('cancel-btn').style.display='none';
+  editId=null;
+}
+
+function cancelEdit(){resetForm();goTo('cases');}
+
+function editCase(id){
+  const c=getCases().find(x=>x.id===id);if(!c)return;
+  editId=id;
+  document.getElementById('f-pid').value=c.pid;
+  if(c.role) document.getElementById('f-role').value=c.role;
+  document.getElementById('f-date').value=c.date;
+  document.getElementById('f-hospital').value=c.hospital||'';
+  // Cascade: set category → type → procedure → detail in sequence
+  document.getElementById('f-cat').value=c.cat||'';
+  onProcCat();
+  if(c.type){
+    document.getElementById('f-type').value=c.type;
+    onProcType();
+  }
+  if(c.proc){
+    document.getElementById('f-proc').value=c.proc;
+    onProcProc();
+  }
+  else if(c.type==='Embryo Transfer'){
+    // ET is type-only, trigger ET field display
+    document.getElementById('et-fields').style.display='block';
+    document.getElementById('pregnant-section').style.display='block';
+  }
+  if(c.detail){
+    const fDetail=document.getElementById('f-detail');
+    // Check if detail is an "Other" substitute
+    const detailOpts=Array.from(fDetail.options).map(o=>o.value);
+    if(detailOpts.includes(c.detail)){
+      fDetail.value=c.detail;
+    } else {
+      // It was an "Other" free-text value
+      fDetail.value='Other';
+      document.getElementById('f-other-text').value=c.detail;
+      document.getElementById('other-text-wrap').style.display='block';
+    }
+    onProcDetail();
+  }
+  document.getElementById('f-obs').value=c.obs||'';
+  if(c.pregnant) document.getElementById('pregnant-toggle').classList.add('checked');
+  if(c.complications&&c.complications.length) setComplications(c.complications);
+  if(c.prevCS!=null) document.getElementById('f-prev-cs').value=c.prevCS;
+  if(c.steril){document.getElementById('f-steril').checked=true;document.getElementById('steril-toggle').classList.add('checked');}
+  if(c.oocyteData){
+    const trigger=c.oocyteData.trigger||'';
+    const triggerOpts=['Ovidrel','Decapeptyl','Dual'];
+    if(triggerOpts.includes(trigger)){
+      document.getElementById('f-oo-trigger').value=trigger;
+    }else if(trigger){
+      document.getElementById('f-oo-trigger').value='Other';
+      document.getElementById('f-oo-trigger-other').value=trigger;
+      document.getElementById('trigger-other-wrap').style.display='block';
+    }
+    document.getElementById('f-oo-hours').value=c.oocyteData.hours||'';
+    document.getElementById('f-oo-follicles').value=c.oocyteData.follicles||'';
+    document.getElementById('f-oo-eggs').value=c.oocyteData.eggsRetrieved||'';
+    if(c.oocyteData.la){document.getElementById('f-la').checked=true;document.getElementById('la-toggle').classList.add('checked');}
+  }
+  if(c.etData){
+    document.getElementById('f-et-number').value=c.etData.embryosTransferred||'';
+  }
+  if(c.pregnant) document.getElementById('pregnant-toggle').classList.add('checked');
+  updateProcBadge();
+  document.getElementById('form-title').textContent='Edit Case';
+  document.getElementById('save-btn').textContent='Update Case';
+  document.getElementById('cancel-btn').style.display='block';
+  closeModal();goTo('new-case');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function deleteCase(id){
+  if(!confirm('Delete this case? This cannot be undone.'))return;
+  setCases(getCases().filter(c=>c.id!==id));
+  closeModal();renderCases();refreshDash();
+}
+
+// ═══════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════
+function openModal(id){
+  const c=getCases().find(x=>x.id===id);if(!c)return;
+  modalId=id;
+  document.getElementById('modal-pid').textContent=c.pid;
+  const procStr=[c.type,c.proc,c.detail].filter(Boolean).join(' › ')||c.type;
+  const compChips=(c.complications||[]).map(cp=>'<span style="padding:2px 8px;border-radius:20px;font-size:11px;background:rgba(251,113,133,0.12);color:var(--rose);border:1px solid rgba(251,113,133,0.25)">⚠ '+esc(cp)+'</span>').join(' ');
+  const csInfo=c.prevCS!=null?'<div class="modal-field"><div class="mf-label">Previous C-Sections</div><div class="mf-value">'+c.prevCS+'</div></div>':'';
+  const sterilInfo=c.steril?'<div class="modal-field"><div class="mf-label">Sterilisation</div><div class="mf-value" style="color:var(--blue)">Yes</div></div>':'';
+  const hospInfo=c.hospital?'<div class="modal-field"><div class="mf-label">Hospital</div><div class="mf-value">'+esc(c.hospital)+'</div></div>':'';
+  const pregInfo=c.pregnant?'<div class="modal-field"><div class="mf-label">Outcome</div><div class="mf-value"><span class="pregnant-chip">✓ Pregnant</span></div></div>':'';
+  const roleChip=c.role?'<span class="badge b-blue" style="font-size:10px">'+esc(c.role)+'</span>':'';
+  document.getElementById('modal-body').innerHTML=
+    oocyteInfo+etInfo+pregCheckInfo+
+    '<div style="display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap">'+
+      '<span class="badge '+(catBadge[c.cat]||'')+'">'+c.cat+'</span>'+
+      (procStr?'<span class="badge b-blue" style="font-size:10px">'+esc(procStr)+'</span>':'')+roleChip+
+      '<span style="font-size:11px;color:var(--muted);align-self:center">📅 '+fmt(c.date)+'</span>'+
+    '</div>'+
+    hospInfo+
+    csInfo+sterilInfo+pregInfo+
+    '<div class="modal-field"><div class="mf-label">Clinical Observations</div><div class="mf-value">'+esc(c.obs)+'</div></div>'+
+    (c.out?'<div class="modal-field"><div class="mf-label">Outcome Notes</div><div class="mf-value">'+esc(c.out)+'</div></div>':'')+
+    (compChips?'<div class="modal-field"><div class="mf-label">Complications</div><div class="mf-chips">'+compChips+'</div></div>':'');
+  document.getElementById('case-modal').classList.add('show');
+}
+function closeModal(){document.getElementById('case-modal').classList.remove('show');modalId=null;}
+function editModal(){if(modalId)editCase(modalId);}
+function deleteModal(){if(modalId)deleteCase(modalId);}
+
+// ═══════════════════════════════════════════════
+// RENDER CASES LIST
+// ═══════════════════════════════════════════════
+function onCatFilter(){
+  const cat=document.getElementById('fcat').value;
+  const fproc=document.getElementById('fproc');
+  fproc.innerHTML='<option value="">All Procedures</option>';
+  if(cat&&PROC[cat]){
+    Object.keys(PROC[cat]).forEach(type=>{
+      const procs=PROC[cat][type];
+      Object.keys(procs).forEach(proc=>{
+        const og=document.createElement('optgroup');og.label=type+' › '+proc;
+        const details=procs[proc];
+        if(Array.isArray(details)&&details.length){
+          details.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;og.appendChild(o);});
+          fproc.appendChild(og);
+        } else {
+          const o=document.createElement('option');o.value=proc;o.textContent=type+' › '+proc;fproc.appendChild(o);
+        }
+      });
+    });
+  }
+  renderCases();
+}
+
+
+// Pagination state
+let currentPage=1;
+let selectedCases=new Set();
+
+function changePage(dir){
+  currentPage+=dir;
+  renderCases();
+}
+
+function toggleSelect(id){
+  if(selectedCases.has(id)) selectedCases.delete(id);
+  else selectedCases.add(id);
+  updateBulkUI();
+}
+
+function selectAll(){
+  const cases=getFilteredCases();
+  const perPage=parseInt(document.getElementById('per-page').value);
+  const start=(currentPage-1)*perPage;
+  const end=start+perPage;
+  const pageIds=cases.slice(start,end).map(c=>c.id);
+  pageIds.forEach(id=>selectedCases.add(id));
+  renderCases();
+  updateBulkUI();
+}
+
+function deselectAll(){
+  selectedCases.clear();
+  renderCases();
+  updateBulkUI();
+}
+
+function updateBulkUI(){
+  const bulk=document.getElementById('bulk-actions');
+  const count=selectedCases.size;
+  document.getElementById('sel-count').textContent=count;
+  bulk.style.display=count>0?'block':'none';
+}
+
+function bulkDelete(){
+  if(!selectedCases.size) return;
+  if(!confirm(`Delete ${selectedCases.size} selected case${selectedCases.size>1?'s':''}? This cannot be undone.`)) return;
+  const cases=getCases().filter(c=>!selectedCases.has(c.id));
+  setCases(cases);
+  selectedCases.clear();
+  currentPage=1;
+  renderCases();
+  updateBulkUI();
+  refreshDash();
+}
+
+function getFilteredCases(){
+  const srch=document.getElementById('srch').value.toLowerCase();
+  const fcat=document.getElementById('fcat').value;
+  const fproc=document.getElementById('fproc').value;
+  const fpreg=document.getElementById('fpreg').value;
+  let cases=getCases();
+  if(srch) cases=cases.filter(c=>c.pid.toLowerCase().includes(srch)||c.obs.toLowerCase().includes(srch)||(c.hospital||'').toLowerCase().includes(srch));
+  if(fcat) cases=cases.filter(c=>c.cat===fcat);
+  if(fproc) cases=cases.filter(c=>c.proc===fproc||c.detail===fproc||c.type===fproc);
+  if(fpreg==='yes') cases=cases.filter(c=>c.pregnant);
+  return cases;
+}
+
+function renderCases(){
+  const srch=document.getElementById('srch').value.toLowerCase();
+  const fcat=document.getElementById('fcat').value;
+  const fproc=document.getElementById('fproc').value;
+  const fpreg=document.getElementById('fpreg').value;
+  let cases=getCases();
+  if(srch) cases=cases.filter(c=>c.pid.toLowerCase().includes(srch)||c.obs.toLowerCase().includes(srch)||(c.out||'').toLowerCase().includes(srch)||(c.hospital||'').toLowerCase().includes(srch));
+  if(fcat) cases=cases.filter(c=>c.cat===fcat);
+  if(fproc) cases=cases.filter(c=>c.proc===fproc||c.detail===fproc||c.type===fproc);
+  if(fpreg==='yes') cases=cases.filter(c=>c.pregnant);
+  const el=document.getElementById('cases-container');
+  if(!cases.length){el.innerHTML='<div class="empty"><span class="empty-icon">📋</span><p>No cases found</p></div>';return;}
+  el.innerHTML=cases.map(c=>{
+    const procStr=[c.type,c.proc,c.detail].filter(Boolean).join(' › ')||c.type;
+    const compBadge=c.complications&&c.complications.length?'<span style="font-size:10px;color:var(--rose)">⚠ '+c.complications.length+' complication'+(c.complications.length>1?'s':'')+'</span>':'';
+    return '<div class="case-card" onclick="openModal(\''+c.id+'\')">'+
+      '<div class="case-pid">'+esc(c.pid)+(c.pregnant?'  <span class="pregnant-chip" style="vertical-align:middle">✓ Pregnant</span>':'')+'</div>'+
+      '<div class="case-meta-row">'+
+        '<span class="badge '+(catBadge[c.cat]||'')+'">'+c.cat+'</span>'+
+        (procStr?'<span class="badge b-blue" style="font-size:10px">'+esc(procStr)+'</span>':'')+(c.role?'<span class="badge" style="background:rgba(45,212,191,0.08);color:var(--teal);border:1px solid rgba(45,212,191,0.2);font-size:10px">'+esc(c.role)+'</span>':'')+
+        (c.hospital?'<span class="case-date">🏥 '+esc(c.hospital)+'</span>':'')+
+        '<span class="case-date">📅 '+fmt(c.date)+'</span>'+
+        compBadge+
+      '</div>'+
+      (c.obs?'<div class="case-preview">'+esc(c.obs)+'</div>':'')+
+      '<div style="display:flex;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)" onclick="event.stopPropagation()">'+
+        '<button class="btn btn-glass btn-sm" onclick="editCase(\''+c.id+'\')">✏️ Edit</button>'+
+        '<button class="btn btn-rose btn-sm" onclick="deleteCase(\''+c.id+'\')">🗑 Delete</button>'+
+      '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  updateBulkUI();
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function clearDashFilters(){
+  document.getElementById('df-from').value='';
+  document.getElementById('df-to').value='';
+  document.getElementById('df-cat').value='';
+  refreshDash();
+}
+
+function refreshDash(){
+  let cases=getCases();
+  const from=document.getElementById('df-from').value;
+  const to=document.getElementById('df-to').value;
+  const cat=document.getElementById('df-cat').value;
+  if(from) cases=cases.filter(c=>c.date>=from);
+  if(to) cases=cases.filter(c=>c.date<=to);
+  if(cat) cases=cases.filter(c=>c.cat===cat);
+
+  const now=new Date();
+  const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  document.getElementById('d-total').textContent=cases.length;
+  document.getElementById('d-month').textContent=cases.filter(c=>c.date.startsWith(ym)).length;
+  document.getElementById('d-obs').textContent=cases.filter(c=>c.cat==='Obstetrics').length;
+  document.getElementById('d-art').textContent=cases.filter(c=>c.cat==='ART').length;
+  renderDonut(cases);
+  renderPregnancyChecks();
+  const rc=cases.slice(0,5);
+  document.getElementById('recent-count').textContent=cases.length;
+  document.getElementById('recent-list').innerHTML=rc.length
+    ?rc.map(c=>'<div style="padding:10px 0;border-bottom:1px solid var(--border);transition:opacity 0.15s" onmouseenter="this.style.opacity=\'.65\'" onmouseleave="this.style.opacity=\'1\'" onclick="openModal(\''+c.id+'\')">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-weight:700;font-size:13px">'+esc(c.pid)+'</span><span class="case-date">'+fmt(c.date)+'</span></div>'+
+        '<span class="badge '+(catBadge[c.cat]||'')+'" style="font-size:10px">'+c.cat+'</span>'+
+        (c.proc?' <span style="font-size:10px;color:var(--muted)">'+esc(c.proc)+'</span>':'')+
+        (c.detail?' <span style="font-size:10px;color:var(--faint)"> › '+esc(c.detail)+'</span>':'')+
+      '</div>').join('')
+    :'<div style="color:var(--muted);font-size:13px;padding:18px 0;text-align:center">No cases yet</div>';
+}
+
+
+function renderPregnancyChecks(){
+  const cases=getCases().filter(c=>c.pregnancyCheckDate&&!c.pregnant);
+  const today=new Date().toISOString().slice(0,10);
+  
+  // Sort by check date (nearest first)
+  const sorted=cases.sort((a,b)=>a.pregnancyCheckDate.localeCompare(b.pregnancyCheckDate));
+  
+  // Separate overdue and upcoming
+  const overdue=sorted.filter(c=>c.pregnancyCheckDate<today);
+  const upcoming=sorted.filter(c=>c.pregnancyCheckDate>=today);
+  
+  document.getElementById('preg-check-count').textContent=sorted.length;
+  
+  if(!sorted.length){
+    document.getElementById('preg-check-list').innerHTML='<div style="color:var(--muted);font-size:13px;padding:18px 0;text-align:center">No pending checks</div>';
+    return;
+  }
+  
+  const renderCheck=c=>{
+    const daysUntil=Math.ceil((new Date(c.pregnancyCheckDate)-new Date(today))/(1000*60*60*24));
+    const isOverdue=c.pregnancyCheckDate<today;
+    const statusColor=isOverdue?'var(--rose)':daysUntil<=3?'var(--amber)':'var(--teal)';
+    const statusText=isOverdue?'Overdue':daysUntil===0?'Today':daysUntil===1?'Tomorrow':daysUntil+' days';
+    
+    return '<div style="padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity 0.15s" onmouseenter="this.style.opacity=\'.65\'" onmouseleave="this.style.opacity=\'1\'" onclick="openModal(\''+c.id+'\')">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'+
+        '<span style="font-weight:700;font-size:13px">'+esc(c.pid)+'</span>'+
+        '<span style="font-size:11px;color:'+statusColor+';font-weight:700">'+statusText+'</span>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--muted)">ET: '+fmt(c.date)+' → Check: '+fmt(c.pregnancyCheckDate)+'</div>'+
+    '</div>';
+  };
+  
+  const html=[
+    ...overdue.map(renderCheck),
+    ...upcoming.slice(0,5).map(renderCheck)
+  ].join('');
+  
+  document.getElementById('preg-check-list').innerHTML=html;
+  
+  // Show notification for overdue checks (only on dashboard page load)
+  if(overdue.length&&!sessionStorage.getItem('preg_notif_'+today)&&document.getElementById('page-dashboard').classList.contains('active')){
+    setTimeout(()=>{
+      sessionStorage.setItem('preg_notif_'+today,'1');
+      if(confirm(overdue.length+' pregnancy check'+(overdue.length>1?'s are':' is')+' overdue.\n\nView now?')){
+        // Already on dashboard, just scroll to top
+        window.scrollTo({top:0,behavior:'smooth'});
+      }
+    },800);
+  }
+}
+
+function renderDonut(cases){
+  const cc={};cases.forEach(c=>{cc[c.cat]=(cc[c.cat]||0)+1;});
+  const entries=Object.entries(cc).sort((a,b)=>b[1]-a[1]);
+  const total=cases.length||1;const r=46,cx=60,cy=60,sw=18,circ=2*Math.PI*r;
+  let off=0;
+  const segs=entries.map(([cat,cnt],i)=>{
+    const pct=cnt/total;
+    const s='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+(catColors[cat]||donutColors[i%donutColors.length])+'" stroke-width="'+sw+'" stroke-dasharray="'+(circ*pct)+' '+(circ*(1-pct))+'" stroke-dashoffset="'+(-circ*off+circ*0.25)+'" transform="rotate(-90 '+cx+' '+cy+')" style="cursor:pointer" onclick="goToFiltered(\''+cat+'\')" />';
+    off+=pct;return s;
+  });
+  document.getElementById('donut-svg').innerHTML=
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="'+sw+'"/>'+segs.join('')+
+    '<text x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" fill="var(--text)" font-size="16" font-family="Playfair Display,serif">'+total+'</text>'+
+    '<text x="'+cx+'" y="'+(cy+19)+'" text-anchor="middle" fill="var(--muted)" font-size="8">CASES</text>';
+  document.getElementById('donut-legend').innerHTML=entries.slice(0,6).map(([cat,cnt],i)=>
+    '<div class="legend-item" onclick="goToFiltered(\''+cat+'\')">'+
+      '<div class="legend-dot" style="background:'+(catColors[cat]||donutColors[i%donutColors.length])+'"></div>'+
+      '<span class="legend-label">'+cat+'</span><span class="legend-val">'+cnt+'</span>'+
+    '</div>').join('')||'<div style="color:var(--muted);font-size:13px">No data yet</div>';
+}
+
+// ═══════════════════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════════════════
+function renderAnalytics(){renderWeekly();render8Weeks();renderOutcomeStats();renderCatDist();renderObsDist();}
+function changeWeek(d){weekOffset+=d;renderWeekly();}
+
+function renderWeekly(){
+  const cases=getCases();const now=new Date();
+  const base=new Date(now);base.setDate(base.getDate()+weekOffset*7);
+  const day=base.getDay();const mon=new Date(base);mon.setDate(base.getDate()-(day===0?6:day-1));
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  document.getElementById('week-label').textContent=weekOffset===0?'This Week':fmtShort(mon)+' – '+fmtShort(new Date(mon.getTime()+6*86400000));
+  const todayStr=isoDate(now);let html='';
+  for(let i=0;i<7;i++){
+    const d=new Date(mon.getTime()+i*86400000);const ds=isoDate(d);
+    const dc=cases.filter(c=>c.date===ds);const isToday=ds===todayStr;
+    html+='<div class="day-col'+(isToday?' today':'')+'">'+'<div class="day-name">'+days[i]+'</div><div class="day-num">'+d.getDate()+'</div>'+'<div class="day-count'+(dc.length===0?' zero':'')+'">'+dc.length+'</div>'+'<div style="font-size:9px;color:var(--muted)">'+(dc.length===1?'case':'cases')+'</div></div>';
+  }
+  document.getElementById('daily-grid').innerHTML=html;
+}
+
+function render8Weeks(){
+  const cases=getCases();const now=new Date();
+  const weeks=[];
+  for(let i=7;i>=0;i--){
+    const end=new Date(now);end.setDate(now.getDate()-i*7);
+    const start=new Date(end);start.setDate(end.getDate()-6);
+    const cnt=cases.filter(c=>c.date>=isoDate(start)&&c.date<=isoDate(end)).length;
+    weeks.push({label:fmtShort(start),cnt});
+  }
+  const max=Math.max(...weeks.map(w=>w.cnt),1);
+  document.getElementById('weekly-bars').innerHTML=weeks.map(w=>
+    '<div class="bar-group"><div class="bar-track"><div class="bar-fill" style="height:'+Math.max(Math.round((w.cnt/max)*100),w.cnt>0?4:0)+'%" data-val="'+w.cnt+'"></div></div><div class="bar-label">'+w.label+'</div></div>'
+  ).join('');
+}
+
+function renderOutcomeStats(){
+  const cases=getCases();
+  const obsCases=cases.filter(c=>c.cat==='Obstetrics');
+  
+  // Calculate stats
+  const caesareans=cases.filter(c=>c.proc==='Caesarean Section').length;
+  const svd=cases.filter(c=>c.detail==='SVD'||c.proc==='SVD').length;
+  const withComps=obsCases.filter(c=>c.complications&&c.complications.length>0).length;
+  const steril=cases.filter(c=>c.steril).length;
+  
+  // Most common complication
+  const compCounts={};
+  obsCases.forEach(c=>{
+    (c.complications||[]).forEach(comp=>{
+      compCounts[comp]=(compCounts[comp]||0)+1;
+    });
+  });
+  const topComp=Object.entries(compCounts).sort((a,b)=>b[1]-a[1])[0];
+  const topCompName=topComp?topComp[0]:'None';
+  const topCompCount=topComp?topComp[1]:0;
+  
+  const stats=[
+    {label:'Caesarean Sections',val:caesareans,sub:obsCases.length?((caesareans/obsCases.length)*100).toFixed(0)+'% of obs cases':'—',glow:'sg-amber'},
+    {label:'SVD Deliveries',val:svd,sub:obsCases.length?((svd/obsCases.length)*100).toFixed(0)+'% of obs cases':'—',glow:'sg-teal'},
+    {label:'Cases with Complications',val:withComps,sub:obsCases.length?((withComps/obsCases.length)*100).toFixed(0)+'% of obs':'—',glow:'sg-rose'},
+    {label:'Most Common Complication',val:topCompName,sub:topCompCount+' occurrence'+(topCompCount===1?'':'s'),glow:'sg-violet'},
+  ];
+  
+  document.getElementById('outcome-stats-grid').innerHTML=stats.map(s=>
+    '<div class="outcome-stat">'+
+      '<div class="os-glow '+s.glow+'"></div>'+
+      '<div class="os-label">'+s.label+'</div>'+
+      '<div class="os-val">'+(typeof s.val==='number'?s.val:esc(s.val))+'</div>'+
+      '<div class="os-delta">'+s.sub+'</div>'+
+    '</div>'
+  ).join('');
+}
+
+function renderDistBar(containerId,data,colorFn){
+  const max=data[0]?.[1]||1;
+  document.getElementById(containerId).innerHTML=data.length
+    ?data.map(([label,cnt])=>
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+
+        '<div style="width:130px;font-size:12px;color:var(--muted);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(label)+'">'+esc(label)+'</div>'+
+        '<div style="flex:1;height:7px;background:rgba(255,255,255,0.04);border-radius:99px;overflow:hidden">'+
+          '<div style="height:100%;border-radius:99px;background:'+(colorFn?colorFn(label):'var(--blue)')+';width:'+(cnt/max*100).toFixed(0)+'%"></div>'+
+        '</div>'+
+        '<div style="width:24px;text-align:right;font-size:12px;font-weight:700;color:var(--text)">'+cnt+'</div>'+
+      '</div>'
+    ).join('')
+    :'<div style="color:var(--muted);font-size:13px">No data yet</div>';
+}
+
+function renderCatDist(){
+  const cases=getCases();const cc={};cases.forEach(c=>{cc[c.cat]=(cc[c.cat]||0)+1;});
+  renderDistBar('cat-dist',Object.entries(cc).sort((a,b)=>b[1]-a[1]),cat=>catColors[cat]||'var(--blue)');
+}
+
+function renderObsDist(){
+  const cases=getCases().filter(c=>c.cat==='Obstetrics');
+  const cc={};
+  cases.forEach(c=>{
+    // Show lowest level: Detail if present, else Procedure
+    const key=c.detail||c.proc||c.type;
+    cc[key]=(cc[key]||0)+1;
+  });
+  renderDistBar('obs-dist',Object.entries(cc).sort((a,b)=>b[1]-a[1]),()=>'var(--amber)');
+}
+
+// ═══════════════════════════════════════════════
+// PROFILE
+// ═══════════════════════════════════════════════
+function loadProfile(){
+  document.getElementById('p-first').value=user.firstName||'';
+  document.getElementById('p-last').value=user.lastName||'';
+  document.getElementById('p-email').value=user.email||'';
+  document.getElementById('p-user').value=user.username||'';
+  document.getElementById('p-role').value=user.role||'';
+  renderQuals();
+}
+
+function saveProfile(){
+  const first=document.getElementById('p-first').value.trim();
+  const last=document.getElementById('p-last').value.trim();
+  const email=document.getElementById('p-email').value.trim();
+  const username=document.getElementById('p-user').value.trim().toLowerCase();
+  const role=document.getElementById('p-role').value.trim();
+  if(!first||!last||!email||!username){showProfileAlert('Please fill in all required fields.','error');return;}
+  const users=S.users();
+  const idx=users.findIndex(u=>u.id===user.id);
+  if(idx<0)return;
+  // Check username not taken by another user
+  if(users.find(u=>u.username===username&&u.id!==user.id)){showProfileAlert('Username already taken.','error');return;}
+  users[idx]={...users[idx],firstName:first,lastName:last,fullName:first+' '+last,email,username,role};
+  S.setUsers(users);
+  user=users[idx];
+  S.setSession({id:user.id,username:user.username,fullName:user.fullName});
+  document.getElementById('sb-name').textContent=user.fullName;
+  const ini=user.fullName.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('sb-avatar').textContent=ini;
+  showProfileAlert('Profile updated successfully.','success');
+}
+
+function changePassword(){
+  const cur=document.getElementById('p-cur-pass').value;
+  const nw=document.getElementById('p-new-pass').value;
+  const conf=document.getElementById('p-confirm-pass').value;
+  if(!cur||!nw||!conf){showProfileAlert('Please fill in all password fields.','error');return;}
+  if(nw.length<6){showProfileAlert('New password must be at least 6 characters.','error');return;}
+  if(nw!==conf){showProfileAlert('New passwords do not match.','error');return;}
+  const users=S.users();const idx=users.findIndex(u=>u.id===user.id);
+  if(users[idx].ph!==hash(cur)){showProfileAlert('Current password is incorrect.','error');return;}
+  users[idx].ph=hash(nw);S.setUsers(users);
+  document.getElementById('p-cur-pass').value='';document.getElementById('p-new-pass').value='';document.getElementById('p-confirm-pass').value='';
+  showProfileAlert('Password changed successfully.','success');
+}
+
+function showProfileAlert(msg,type){
+  const a=document.getElementById('profile-alert');
+  a.textContent=msg;a.className='alert alert-'+(type==='error'?'error':'success')+' show';
+  setTimeout(()=>a.classList.remove('show'),4000);
+}
+
+function renderQuals(){
+  const quals=S.quals(user.id);
+  document.getElementById('qual-list').innerHTML=quals.length
+    ?quals.map((q,i)=>
+      '<div class="qual-item">'+
+        '<div class="qual-info"><div class="qual-name">'+esc(q.name)+'</div><div class="qual-date">'+fmt(q.date)+'</div></div>'+
+        '<button class="btn btn-rose btn-sm" onclick="deleteQual('+i+')" style="width:auto">×</button>'+
+      '</div>'
+    ).join('')
+    :'<div style="color:var(--muted);font-size:13px;padding:12px 0">No qualifications added yet</div>';
+}
+
+function addQual(){
+  const name=document.getElementById('q-name').value.trim();
+  const date=document.getElementById('q-date').value;
+  if(!name||!date){showProfileAlert('Please enter a qualification name and date.','error');return;}
+  const quals=S.quals(user.id);
+  quals.push({name,date});S.setQuals(user.id,quals);
+  document.getElementById('q-name').value='';document.getElementById('q-date').value='';
+  renderQuals();
+}
+
+function deleteQual(i){
+  if(!confirm('Remove this qualification?'))return;
+  const quals=S.quals(user.id);quals.splice(i,1);S.setQuals(user.id,quals);renderQuals();
+}
+
+// ═══════════════════════════════════════════════
+// AI
+// ═══════════════════════════════════════════════
+function saveKey(){
+  const k=document.getElementById('ai-key').value.trim();
+  if(!k.startsWith('sk-ant-')){alert('Please enter a valid Claude API key (sk-ant-…)');return;}
+  S.setAiKey(k);alert('Key saved.');
+}
+
+async function runAI(){
+  const k=S.aiKey()||document.getElementById('ai-key').value.trim();
+  const cases=getCases();
+  if(!k){alert('Save your API key first, or use Export below.');return;}
+  if(!cases.length){alert('No cases to analyse yet.');return;}
+  const btn=document.getElementById('run-btn');
+  btn.innerHTML='<span class="spinner"></span> Analysing…';btn.disabled=true;
+  const out=document.getElementById('ai-out');out.classList.remove('show');
+  try{
+    const payload=cases.map(c=>({cat:c.cat,type:c.type,proc:c.proc,detail:c.detail,date:c.date,hospital:c.hospital,observations:c.obs,outcome:c.out,pregnant:c.pregnant,complications:c.complications,prevCS:c.prevCS,steril:c.steril}));
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:'You are a clinical analyst for a fertility and gynaecology specialist. Analyse these cases:\n\n'+JSON.stringify(payload,null,2)+'\n\nProvide:\n1. Common presentation patterns\n2. Outcome & complication trends\n3. Procedure distribution insights\n4. Cases needing attention\n5. Recommendations'}]})
+    });
+    if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'API error '+res.status);}
+    const data=await res.json();out.textContent=data.content[0].text;out.classList.add('show');
+  }catch(e){
+    out.textContent='Error: '+e.message+'\n\nIf running locally, use the Export button.';out.classList.add('show');
+  }finally{btn.innerHTML='✦ Analyse Patterns';btn.disabled=false;}
+}
+
+function exportAI(){
+  const cases=getCases();if(!cases.length){alert('No cases to export.');return;}
+  const payload=cases.map(c=>({cat:c.cat,type:c.type,proc:c.proc,detail:c.detail,date:c.date,observations:c.obs,outcome:c.out,pregnant:c.pregnant,complications:c.complications,prevCS:c.prevCS,steril:c.steril}));
+  const prompt='Analyse these fertility & gynaecology clinical cases:\n\n'+JSON.stringify(payload,null,2)+'\n\nProvide:\n1. Presentation patterns\n2. Outcome & complication trends\n3. Procedure distribution\n4. Cases needing attention\n5. Recommendations';
+  navigator.clipboard.writeText(prompt).then(()=>alert('Copied! Paste into Claude.ai.')).catch(()=>{
+    const b=new Blob([prompt],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='ai_prompt.txt';a.click();
+  });
+}
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function isoDate(d){return d.toISOString().slice(0,10);}
+function fmt(d){if(!d)return'';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+function fmtShort(d){return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+function escAttr(s){return s.replace(/'/g,"\\'");}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  try {
+    const s=S.session();
+    if(s){const u=S.users().find(x=>x.id===s.id);if(u){bootApp(u);return;}}
+    // Auth screen is already flex by default (inline style on element)
+    document.getElementById('li-pass').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
+    document.getElementById('rg-pass').addEventListener('keypress',e=>{if(e.key==='Enter')doRegister();});
+  } catch(e) {
+    console.error('Init error:',e);
+    // Ensure auth screen is visible even if something went wrong
+    document.getElementById('auth-screen').style.display='flex';
+  }
+});
+
+// ═══════════════════════════════════════════════
+// IMPORT / EXPORT RANZCOG
+// ═══════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════
+// EXPORT (CSV / Excel / PDF)
+// ═══════════════════════════════════════════════
+function exportCSV(){
+  const cases=getCases();
+  if(!cases.length){alert('No cases to export.');return;}
+  
+  const headers=['Date','Patient ID','Hospital','Role','Category','Type','Procedure','Detail','Clinical Notes','Complications','Prev C-Sections','Sterilisation','Pregnant'];
+  const rows=cases.map(c=>[
+    c.date,c.pid,c.hospital||'',c.role||'',c.cat,c.type,c.proc,c.detail||'',
+    (c.obs||'').replace(/"/g,'""'),
+    (c.complications||[]).join('; '),
+    c.prevCS!=null?c.prevCS:'',
+    c.steril?'Yes':'No',
+    c.pregnant?'Yes':'No'
+  ]);
+  
+  const csv=[headers,...rows].map(r=>r.map(v=>'"'+v+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='ProLog_Export_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+function exportExcel(){
+  const cases=getCases();
+  if(!cases.length){alert('No cases to export.');return;}
+  
+  const data=cases.map(c=>({
+    'Date':c.date,
+    'Patient ID':c.pid,
+    'Hospital':c.hospital||'',
+    'Role':c.role||'',
+    'Category':c.cat,
+    'Type':c.type,
+    'Procedure':c.proc,
+    'Detail':c.detail||'',
+    'Clinical Notes':c.obs||'',
+    'Complications':(c.complications||[]).join('; '),
+    'Previous C-Sections':c.prevCS!=null?c.prevCS:'',
+    'Sterilisation':c.steril?'Yes':'No',
+    'Pregnant':c.pregnant?'Yes':'No'
+  }));
+  
+  const ws=XLSX.utils.json_to_sheet(data);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Cases');
+  XLSX.writeFile(wb,'ProLog_Export_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+function exportPDF(){
+  const cases=getCases();
+  if(!cases.length){alert('No cases to export.');return;}
+  
+  // Build HTML for print
+  const rows=cases.map(c=>
+    '<tr>'+
+      '<td style="padding:8px;border:1px solid #ddd;font-size:11px">'+esc(c.date)+'</td>'+
+      '<td style="padding:8px;border:1px solid #ddd;font-size:11px">'+esc(c.pid)+'</td>'+
+      '<td style="padding:8px;border:1px solid #ddd;font-size:11px">'+esc(c.hospital||'')+'</td>'+
+      '<td style="padding:8px;border:1px solid #ddd;font-size:11px">'+esc(c.role||'')+'</td>'+
+      '<td style="padding:8px;border:1px solid #ddd;font-size:11px">'+[c.cat,c.type,c.proc,c.detail].filter(Boolean).join(' › ')+'</td>'+
+      '<td style="padding:8px;border:1px solid #ddd;font-size:10px;max-width:200px">'+esc(c.obs||'').slice(0,100)+(c.obs&&c.obs.length>100?'...':'')+'</td>'+
+    '</tr>'
+  ).join('');
+  
+  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ProLog Export</title></head><body style="font-family:Arial,sans-serif;padding:20px">'+
+    '<h1 style="margin-bottom:5px">ProLog — Case Export</h1>'+
+    '<p style="color:#666;margin-bottom:20px">Generated '+new Date().toLocaleDateString('en-GB')+'</p>'+
+    '<table style="width:100%;border-collapse:collapse">'+
+      '<thead><tr style="background:#f5f5f5">'+
+        '<th style="padding:10px;border:1px solid #ddd;text-align:left;font-size:12px">Date</th>'+
+        '<th style="padding:10px;border:1px solid #ddd;text-align:left;font-size:12px">Patient ID</th>'+
+        '<th style="padding:10px;border:1px solid #ddd;text-align:left;font-size:12px">Hospital</th>'+
+        '<th style="padding:10px;border:1px solid #ddd;text-align:left;font-size:12px">Role</th>'+
+        '<th style="padding:10px;border:1px solid #ddd;text-align:left;font-size:12px">Procedure</th>'+
+        '<th style="padding:10px;border:1px solid #ddd;text-align:left;font-size:12px">Notes</th>'+
+      '</tr></thead>'+
+      '<tbody>'+rows+'</tbody>'+
+    '</table>'+
+    '</body></html>';
+  
+  const win=window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  win.print();
+}
+
+</script>
+</body>
+</html>
