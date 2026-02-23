@@ -80,7 +80,10 @@ async def login(
     db: AsyncSession = Depends(get_db),
 ) -> User:
     result = await db.execute(
-        select(User).where(User.username == body.username.lower())
+        select(User).where(
+            (User.username == body.username.lower())
+            | (User.email == body.username.lower())
+        )
     )
     user = result.scalar_one_or_none()
 
