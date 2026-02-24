@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../api/client'
+import logoSrc from '../assets/prolog-logo.png'
 
 export default function Auth() {
   const [tab, setTab] = useState('login')
@@ -91,7 +92,7 @@ export default function Auth() {
     <div className="auth-screen">
       <div className="auth-card">
         <div className="auth-logo">
-          P<span>L</span>
+          <img src={logoSrc} alt="ProLog" className="auth-logo-img" />
         </div>
         <div className="auth-tag">Fertility &amp; Gynaecology · Clinical Case Logbook</div>
 
