@@ -22,7 +22,7 @@ export default function Layout() {
       <nav className="sidebar">
         <div className="sidebar-logo">
           <div className="logo-dot" />
-          Pro<span>Log</span>
+          P<span>L</span>
         </div>
 
         <div className="nav-label">Overview</div>
