@@ -19,7 +19,11 @@ def _prepare_password(plain: str) -> bytes:
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return bcrypt.checkpw(_prepare_password(plain), hashed.encode())
+    # Try current method (sha256 pre-hash) first
+    if bcrypt.checkpw(_prepare_password(plain), hashed.encode()):
+        return True
+    # Fall back to legacy method (no pre-hash) for users registered before fadebbe
+    return bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 def get_password_hash(plain: str) -> str:
