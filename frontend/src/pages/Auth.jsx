@@ -71,7 +71,7 @@ export default function Auth() {
     <div className="auth-screen">
       <div className="auth-card">
         <div className="auth-logo">
-          Pro<span>Log</span>
+          P<span>L</span>
         </div>
         <div className="auth-tag">Fertility &amp; Gynaecology · Clinical Case Logbook</div>
 
