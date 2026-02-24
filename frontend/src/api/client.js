@@ -35,6 +35,8 @@ export const api = {
     register: (data) => request('POST', '/auth/register', data),
     logout: () => request('POST', '/auth/logout'),
     me: () => request('GET', '/auth/me'),
+    forgotPassword: (email) => request('POST', '/auth/forgot-password', { email }),
+    resetPassword: (token, new_password) => request('POST', '/auth/reset-password', { token, new_password }),
   },
   cases: {
     list: (params = {}) =>

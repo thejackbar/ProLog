@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
 import Auth from './pages/Auth'
+import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import Cases from './pages/Cases'
 import CaseForm from './pages/CaseForm'
@@ -51,6 +52,7 @@ export default function App() {
               </PublicRoute>
             }
           />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/"
             element={

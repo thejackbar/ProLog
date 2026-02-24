@@ -6,14 +6,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth import (
     create_access_token,
+    create_reset_token,
+    decode_reset_token,
     get_current_user,
     get_password_hash,
+    send_reset_email,
     verify_password,
 )
 from config import settings
 from database import get_db
 from models import User
-from schemas import LoginRequest, TokenResponse, UserCreate, UserResponse
+from schemas import ForgotPasswordRequest, LoginRequest, ResetPasswordRequest, TokenResponse, UserCreate, UserResponse
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -99,6 +102,43 @@ async def login(
     )
     _set_auth_cookie(response, token)
     return user
+
+
+# ── Forgot password ───────────────────────────────────────────────────────────
+@router.post("/forgot-password", status_code=status.HTTP_204_NO_CONTENT)
+async def forgot_password(
+    body: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    result = await db.execute(select(User).where(User.email == body.email.lower()))
+    user = result.scalar_one_or_none()
+    # Always return 204 to avoid exposing whether an email is registered
+    if not user:
+        return
+    token = create_reset_token(user.id, user.password_hash)
+    reset_url = f"{settings.FRONTEND_ORIGIN}/reset-password?token={token}"
+    await send_reset_email(user.email, user.full_name, reset_url)
+
+
+# ── Reset password ─────────────────────────────────────────────────────────────
+@router.post("/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+async def reset_password(
+    body: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    payload = decode_reset_token(body.token)
+    user_id: str = payload["sub"]
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset link")
+
+    if user.password_hash[:16] != payload.get("phash"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset link has already been used")
+
+    user.password_hash = get_password_hash(body.new_password)
+    await db.flush()
 
 
 # ── Logout ────────────────────────────────────────────────────────────────────
