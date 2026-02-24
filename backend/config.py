@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     # CORS – frontend origin(s), comma-separated if multiple
     FRONTEND_ORIGIN: str = "http://localhost:3000"
 
+    # Email / SMTP (optional – if unset, reset URLs are logged to stdout)
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASS: str = ""
+    FROM_EMAIL: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

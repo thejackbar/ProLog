@@ -7,10 +7,14 @@ export default function Auth() {
   const [tab, setTab] = useState('login')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [forgotSent, setForgotSent] = useState(false)
 
   // Login fields
   const [liUser, setLiUser] = useState('')
   const [liPass, setLiPass] = useState('')
+
+  // Forgot password fields
+  const [fpEmail, setFpEmail] = useState('')
 
   // Register fields
   const [rgFirst, setRgFirst] = useState('')
@@ -38,6 +42,22 @@ export default function Auth() {
       navigate('/dashboard')
     } catch (err) {
       setError(err.message || 'Invalid username or password.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async (e) => {
+    e?.preventDefault()
+    if (!fpEmail) return setError('Please enter your email address.')
+    setError('')
+    setLoading(true)
+    try {
+      await api.auth.forgotPassword(fpEmail)
+      setForgotSent(true)
+    } catch {
+      // Always show success to avoid email enumeration
+      setForgotSent(true)
     } finally {
       setLoading(false)
     }
@@ -75,18 +95,52 @@ export default function Auth() {
         </div>
         <div className="auth-tag">Fertility &amp; Gynaecology · Clinical Case Logbook</div>
 
-        <div className="tab-row">
-          <button className={'tab-btn' + (tab === 'login' ? ' active' : '')} onClick={() => { setTab('login'); setError('') }}>
-            Sign In
-          </button>
-          <button className={'tab-btn' + (tab === 'register' ? ' active' : '')} onClick={() => { setTab('register'); setError('') }}>
-            Register
-          </button>
-        </div>
+        {tab !== 'forgot' && (
+          <div className="tab-row">
+            <button className={'tab-btn' + (tab === 'login' ? ' active' : '')} onClick={() => { setTab('login'); setError(''); setForgotSent(false) }}>
+              Sign In
+            </button>
+            <button className={'tab-btn' + (tab === 'register' ? ' active' : '')} onClick={() => { setTab('register'); setError(''); setForgotSent(false) }}>
+              Register
+            </button>
+          </div>
+        )}
 
         {error && <div className="alert alert-error">{error}</div>}
 
-        {tab === 'login' ? (
+        {tab === 'forgot' ? (
+          forgotSent ? (
+            <div style={{ textAlign: 'center', padding: '16px 0' }}>
+              <p style={{ marginBottom: 16 }}>If that email is registered, you'll receive a reset link shortly.</p>
+              <button className="btn btn-ghost" onClick={() => { setTab('login'); setForgotSent(false); setFpEmail('') }}>
+                ← Back to Sign In
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleForgotPassword}>
+              <p style={{ marginBottom: 16, color: 'var(--muted)', fontSize: 14 }}>
+                Enter your account email and we'll send you a reset link.
+              </p>
+              <div className="field">
+                <label>Email</label>
+                <input
+                  type="email"
+                  value={fpEmail}
+                  onChange={(e) => setFpEmail(e.target.value)}
+                  placeholder="you@clinic.com"
+                  autoComplete="email"
+                />
+              </div>
+              <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%' }}>
+                {loading ? <span className="spinner" /> : 'Send Reset Link →'}
+              </button>
+              <button type="button" className="btn btn-ghost" style={{ width: '100%', marginTop: 8 }}
+                onClick={() => { setTab('login'); setError('') }}>
+                ← Back to Sign In
+              </button>
+            </form>
+          )
+        ) : tab === 'login' ? (
           <form onSubmit={handleLogin}>
             <div className="field">
               <label>Username</label>
@@ -110,6 +164,10 @@ export default function Auth() {
             </div>
             <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%' }}>
               {loading ? <span className="spinner" /> : 'Sign In →'}
+            </button>
+            <button type="button" className="btn btn-ghost" style={{ width: '100%', marginTop: 8 }}
+              onClick={() => { setTab('forgot'); setError('') }}>
+              Forgot password?
             </button>
           </form>
         ) : (
