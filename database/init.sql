@@ -17,11 +17,11 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS cases (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id                 UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    patient_id              TEXT NOT NULL,
-    case_date               DATE NOT NULL,
+    patient_id              TEXT,
+    case_date               DATE,
     hospital                TEXT,
     clinical_role           TEXT,
-    category                TEXT NOT NULL,
+    category                TEXT,
     type                    TEXT,
     procedure               TEXT,
     detail                  TEXT,
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS qualifications (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name            TEXT NOT NULL,
-    date_obtained   DATE NOT NULL,
+    date_obtained   DATE,
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
