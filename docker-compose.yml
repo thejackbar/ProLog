@@ -1,36 +1,14 @@
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: prolog-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME:-prolog}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME:-prolog}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - docker-shared-net
-
   backend:
     build: ./backend
     container_name: prolog-backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME:-prolog}
+      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@prolog-db:5432/${DB_NAME:-prolog}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRY_DAYS: ${JWT_EXPIRY_DAYS:-7}
       CLAUDE_API_KEY: ${CLAUDE_API_KEY:-}
       NODE_ENV: ${NODE_ENV:-production}
-    depends_on:
-      db:
-        condition: service_healthy
     expose:
       - "8000"
     ports:
@@ -56,6 +34,3 @@ networks:
   docker-shared-net:
     external: true
     name: docker-shared-net
-
-volumes:
-  postgres_data:
