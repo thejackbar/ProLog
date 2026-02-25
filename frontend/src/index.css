@@ -89,8 +89,9 @@ body::before {
 }
 
 .sidebar-logo-img {
-  height: 36px;
-  width: auto;
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
   display: block;
 }
 
@@ -672,7 +673,7 @@ body::before {
 }
 
 .auth-logo { margin-bottom: 6px; }
-.auth-logo-img { height: 64px; width: auto; display: block; margin: 0 auto; }
+.auth-logo-img { width: 50px; height: 50px; object-fit: contain; display: block; margin: 0 auto; }
 .auth-tag { color: var(--muted); font-size: 13px; margin-bottom: 36px; }
 
 .tab-row {
