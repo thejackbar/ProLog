@@ -1,6 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import logoSrc from '../assets/prolog-logo.png'
 
 export default function Layout() {
   const { user, logout } = useAuth()
@@ -22,7 +21,7 @@ export default function Layout() {
     <div className="app-shell">
       <nav className="sidebar">
         <div className="sidebar-logo">
-          <img src={logoSrc} alt="ProLog" className="sidebar-logo-img" />
+          <img src="/logo/prolog-logo.png" alt="ProLog" className="sidebar-logo-img" />
         </div>
 
         <div className="nav-label">Overview</div>

@@ -27,6 +27,8 @@ services:
       - "80"
     ports:
       - "127.0.0.1:18000:80"
+    volumes:
+      - ./logo:/usr/share/nginx/html/logo
     networks:
       - docker-shared-net
 
