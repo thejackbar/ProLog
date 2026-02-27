@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ProLog — Developer Documentation</title>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:    #1a56db;
+    --blue-lt: #e8f0fe;
+    --gray:    #374151;
+    --gray-lt: #f3f4f6;
+    --border:  #d1d5db;
+    --code-bg: #1e2433;
+    --code-fg: #e2e8f0;
+    --accent:  #0f4c81;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--gray);
+    background: #fff;
+    padding: 0;
+  }
+
+  /* ── Cover page ── */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 80px 80px 60px;
+    background: linear-gradient(145deg, #0f2d5e 0%, #1a56db 100%);
+    color: #fff;
+    page-break-after: always;
+  }
+  .cover .badge {
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.3);
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 32px;
+  }
+  .cover h1 {
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    margin-bottom: 16px;
+  }
+  .cover .subtitle {
+    font-size: 20px;
+    opacity: .75;
+    max-width: 480px;
+    margin-bottom: 60px;
+  }
+  .cover .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 40px;
+  }
+  .cover .meta-item label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    opacity: .6;
+    margin-bottom: 4px;
+  }
+  .cover .meta-item span {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* ── TOC ── */
+  .toc {
+    padding: 60px 80px;
+    page-break-after: always;
+  }
+  .toc h2 { font-size: 22px; font-weight: 700; margin-bottom: 24px; color: var(--accent); }
+  .toc ol {
+    list-style: none;
+    counter-reset: toc;
+  }
+  .toc > ol > li {
+    counter-increment: toc;
+    padding: 6px 0;
+    border-bottom: 1px dotted var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .toc > ol > li::before {
+    content: counter(toc) ".";
+    font-weight: 700;
+    color: var(--blue);
+    min-width: 22px;
+  }
+  .toc > ol > li .dots {
+    flex: 1;
+    border-bottom: 1px dotted var(--border);
+    margin: 0 8px;
+  }
+  .toc-sub {
+    list-style: none;
+    padding-left: 30px;
+    margin-top: 4px;
+  }
+  .toc-sub li {
+    font-size: 13px;
+    color: #6b7280;
+    padding: 2px 0;
+  }
+
+  /* ── Content layout ── */
+  .content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 80px;
+  }
+
+  /* ── Section breaks ── */
+  .section { page-break-before: always; }
+  .section:first-of-type { page-break-before: avoid; }
+
+  /* ── Headings ── */
+  h1 { font-size: 32px; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--blue-lt);
+  }
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin: 28px 0 10px;
+  }
+  h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    margin: 18px 0 6px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  /* ── Lead / intro ── */
+  .lead {
+    font-size: 16px;
+    color: #6b7280;
+    margin-bottom: 32px;
+    line-height: 1.7;
+  }
+
+  /* ── Paragraphs ── */
+  p { margin-bottom: 12px; }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 16px 0 24px;
+  }
+  thead tr { background: var(--accent); color: #fff; }
+  thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: .04em;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+  tbody tr:nth-child(even) { background: var(--gray-lt); }
+  tbody td { padding: 8px 14px; border-bottom: 1px solid var(--border); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ── Code blocks ── */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border-radius: 8px;
+    padding: 18px 20px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 12px 0 20px;
+  }
+  code {
+    background: var(--blue-lt);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 12px;
+  }
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    border-radius: 0;
+    font-size: inherit;
+  }
+
+  /* ── Callout boxes ── */
+  .callout {
+    border-left: 4px solid var(--blue);
+    background: var(--blue-lt);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  .callout.warn {
+    border-left-color: #f59e0b;
+    background: #fffbeb;
+  }
+  .callout.success {
+    border-left-color: #10b981;
+    background: #f0fdf4;
+  }
+
+  /* ── Cards / grid ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 16px 0 24px;
+  }
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    background: #fafafa;
+  }
+  .card h4 {
+    margin-top: 0;
+    font-size: 13px;
+    color: var(--blue);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .card ul { padding-left: 18px; font-size: 13px; color: #4b5563; }
+  .card ul li { margin-bottom: 3px; }
+
+  /* ── Tech stack badges ── */
+  .stack-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 16px 0 28px;
+  }
+  .stack-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--blue-lt);
+    border: 1px solid #bfdbfe;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+  .stack-badge .layer {
+    font-size: 10px;
+    font-weight: 400;
+    opacity: .7;
+  }
+
+  /* ── File tree ── */
+  .tree {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border-radius: 8px;
+    padding: 18px 20px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 12.5px;
+    line-height: 1.8;
+    margin: 12px 0 24px;
+  }
+  .tree .dir { color: #93c5fd; }
+  .tree .file { color: #a3e635; }
+  .tree .comment { color: #64748b; }
+
+  /* ── Endpoint list ── */
+  .endpoint {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+  }
+  .method {
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    min-width: 46px;
+    text-align: center;
+  }
+  .method.get    { background: #d1fae5; color: #065f46; }
+  .method.post   { background: #dbeafe; color: #1e3a8a; }
+  .method.put    { background: #fef3c7; color: #78350f; }
+  .method.delete { background: #fee2e2; color: #7f1d1d; }
+  .endpoint .path { font-family: monospace; font-size: 12px; color: var(--accent); }
+  .endpoint .desc { color: #6b7280; font-size: 12px; margin-left: auto; }
+
+  /* ── Security table ── */
+  .sec-row td:first-child { font-weight: 600; color: var(--accent); }
+
+  /* ── Page footer ── */
+  @media print {
+    body { font-size: 13px; }
+    .cover { min-height: 100vh; }
+    .section { page-break-before: always; }
+    pre { page-break-inside: avoid; }
+    table { page-break-inside: avoid; }
+    h2 { page-break-after: avoid; }
+    h3 { page-break-after: avoid; }
+    @page {
+      size: A4;
+      margin: 20mm 18mm;
+    }
+    @page :first { margin: 0; }
+  }
+
+  ul, ol { padding-left: 22px; margin-bottom: 12px; }
+  li { margin-bottom: 3px; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  .pill {
+    display: inline-block;
+    background: var(--gray-lt);
+    border: 1px solid var(--border);
+    color: var(--gray);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ COVER ═══════════════════════════════ -->
+<div class="cover">
+  <div class="badge">Internal Technical Reference</div>
+  <h1>ProLog</h1>
+  <p class="subtitle">Clinical Case Logbook — Developer Documentation</p>
+  <div class="meta-grid">
+    <div class="meta-item"><label>Version</label><span>3.0</span></div>
+    <div class="meta-item"><label>Stack</label><span>React 18 + FastAPI</span></div>
+    <div class="meta-item"><label>Date</label><span>February 2026</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ TOC ═════════════════════════════════ -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><span>Overview &amp; Architecture</span><span class="dots"></span><span>3</span></li>
+    <li><span>Directory Structure</span><span class="dots"></span><span>4</span></li>
+    <li><span>Frontend</span><span class="dots"></span><span>5</span>
+      <ul class="toc-sub">
+        <li>App Entry &amp; Routing</li>
+        <li>Auth Context</li>
+        <li>API Client</li>
+        <li>Procedure Data</li>
+        <li>Pages</li>
+        <li>Styles</li>
+      </ul>
+    </li>
+    <li><span>Backend</span><span class="dots"></span><span>9</span>
+      <ul class="toc-sub">
+        <li>Application Bootstrap</li>
+        <li>Configuration</li>
+        <li>Database &amp; Models</li>
+        <li>Schemas</li>
+        <li>Auth Utilities</li>
+      </ul>
+    </li>
+    <li><span>API Reference</span><span class="dots"></span><span>13</span>
+      <ul class="toc-sub">
+        <li>Auth Endpoints</li>
+        <li>Cases Endpoints</li>
+        <li>Users Endpoints</li>
+        <li>AI Endpoint</li>
+        <li>Export Endpoints</li>
+      </ul>
+    </li>
+    <li><span>Data Models</span><span class="dots"></span><span>16</span></li>
+    <li><span>Security</span><span class="dots"></span><span>18</span></li>
+    <li><span>Deployment</span><span class="dots"></span><span>19</span></li>
+  </ol>
+</div>
+
+<!-- ═══════════════════════════════ CONTENT ═════════════════════════════ -->
+<div class="content">
+
+<!-- ─── 1. Overview ─────────────────────────────────────────────────── -->
+<div class="section">
+<h1>1. Overview &amp; Architecture</h1>
+<p class="lead">
+  ProLog is a clinical case logbook application designed for fertility and gynaecology
+  specialists. It provides a secure, structured interface for recording surgical and clinical
+  encounters, tracking outcomes, running analytics, and generating AI-assisted reflective
+  summaries.
+</p>
+
+<h2>Tech Stack</h2>
+<div class="stack-grid">
+  <span class="stack-badge">React 18 <span class="layer">Frontend UI</span></span>
+  <span class="stack-badge">Vite <span class="layer">Build tool</span></span>
+  <span class="stack-badge">React Router 6 <span class="layer">SPA routing</span></span>
+  <span class="stack-badge">Recharts <span class="layer">Analytics charts</span></span>
+  <span class="stack-badge">FastAPI <span class="layer">Python backend</span></span>
+  <span class="stack-badge">SQLAlchemy (async) <span class="layer">ORM</span></span>
+  <span class="stack-badge">PostgreSQL 16 <span class="layer">Database</span></span>
+  <span class="stack-badge">Docker Compose <span class="layer">Containers</span></span>
+  <span class="stack-badge">Nginx <span class="layer">Reverse proxy</span></span>
+  <span class="stack-badge">Claude Opus 4.6 <span class="layer">AI analysis</span></span>
+</div>
+
+<h2>High-Level Architecture</h2>
+<pre>
+Browser (React SPA)
+    │  HTTP/HTTPS (cookie auth)
+    ▼
+Nginx reverse proxy  ←── SSL termination (Let's Encrypt)
+    │              │
+    │  /           │  /api/*
+    ▼              ▼
+React build     FastAPI  (port 8001)
+(static files)      │
+                    ├── Auth router
+                    ├── Cases router
+                    ├── Users router
+                    ├── AI router      ──→  Anthropic API (Claude)
+                    └── Export router
+                         │
+                         ▼
+                    PostgreSQL 16
+</pre>
+
+<div class="card-grid">
+  <div class="card">
+    <h4>Authentication</h4>
+    <ul>
+      <li>JWT stored in <code>httpOnly</code> cookies</li>
+      <li>bcrypt + SHA-256 password hashing</li>
+      <li>Rate-limited auth endpoints</li>
+      <li>Token-based password reset via email</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>User Isolation</h4>
+    <ul>
+      <li>Every DB query scoped to <code>current_user.id</code></li>
+      <li>Users cannot access other users' cases</li>
+      <li>Hospital/qualification data per-user</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Clinical Features</h4>
+    <ul>
+      <li>3 procedure categories: Obs, Gynae, ART</li>
+      <li>4-level procedure hierarchy</li>
+      <li>ART pregnancy outcome tracking</li>
+      <li>Complication recording</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Export &amp; Analytics</h4>
+    <ul>
+      <li>CSV and styled Excel download</li>
+      <li>Weekly / 8-week trend charts</li>
+      <li>Category distribution donut</li>
+      <li>AI reflective summary (Claude)</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<!-- ─── 2. Directory Structure ───────────────────────────────────────── -->
+<div class="section">
+<h1>2. Directory Structure</h1>
+<div class="tree">
+<span class="dir">ProLog/</span>
+├── README.md
+├── README-v2.md
+├── README-v3.md
+├── v3-architecture-prompt.md
+├── docker-compose.yml          <span class="comment"># production</span>
+├── docker-compose.local.yml    <span class="comment"># local dev (includes Postgres)</span>
+├── prolog.html                 <span class="comment"># legacy monolithic app (historical)</span>
+│
+├── <span class="dir">frontend/</span>
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── index.html
+│   └── <span class="dir">src/</span>
+│       ├── main.jsx
+│       ├── App.jsx
+│       ├── index.css
+│       ├── <span class="dir">api/</span>
+│       │   └── <span class="file">client.js</span>
+│       ├── <span class="dir">context/</span>
+│       │   └── <span class="file">AuthContext.jsx</span>
+│       ├── <span class="dir">components/</span>
+│       │   └── <span class="file">Layout.jsx</span>
+│       ├── <span class="dir">data/</span>
+│       │   └── <span class="file">procedures.js</span>
+│       └── <span class="dir">pages/</span>
+│           ├── <span class="file">Auth.jsx</span>
+│           ├── <span class="file">Dashboard.jsx</span>
+│           ├── <span class="file">Cases.jsx</span>
+│           ├── <span class="file">CaseForm.jsx</span>
+│           ├── <span class="file">Analytics.jsx</span>
+│           ├── <span class="file">AI.jsx</span>
+│           ├── <span class="file">Profile.jsx</span>
+│           └── <span class="file">ResetPassword.jsx</span>
+│
+└── <span class="dir">backend/</span>
+    ├── <span class="file">main.py</span>
+    ├── <span class="file">config.py</span>
+    ├── <span class="file">database.py</span>
+    ├── <span class="file">models.py</span>
+    ├── <span class="file">schemas.py</span>
+    ├── <span class="file">auth.py</span>
+    ├── <span class="file">procedures.py</span>
+    └── <span class="dir">routers/</span>
+        ├── <span class="file">__init__.py</span>
+        ├── <span class="file">auth.py</span>
+        ├── <span class="file">cases.py</span>
+        ├── <span class="file">users.py</span>
+        ├── <span class="file">ai.py</span>
+        └── <span class="file">export.py</span>
+</div>
+</div>
+
+<!-- ─── 3. Frontend ──────────────────────────────────────────────────── -->
+<div class="section">
+<h1>3. Frontend</h1>
+
+<h2>3.1 App Entry &amp; Routing — <code>App.jsx</code></h2>
+<p>The root component wraps the entire app in <code>&lt;AuthProvider&gt;</code> and <code>&lt;BrowserRouter&gt;</code>.
+Routes are divided into public and protected groups.</p>
+
+<table>
+  <thead><tr><th>Route</th><th>Component</th><th>Guard</th></tr></thead>
+  <tbody>
+    <tr><td><code>/login</code></td><td>Auth.jsx</td><td>PublicRoute (redirects if logged in)</td></tr>
+    <tr><td><code>/reset-password</code></td><td>ResetPassword.jsx</td><td>Public</td></tr>
+    <tr><td><code>/</code></td><td>Dashboard.jsx</td><td>ProtectedRoute</td></tr>
+    <tr><td><code>/cases</code></td><td>Cases.jsx</td><td>ProtectedRoute</td></tr>
+    <tr><td><code>/cases/new</code></td><td>CaseForm.jsx</td><td>ProtectedRoute</td></tr>
+    <tr><td><code>/cases/:id/edit</code></td><td>CaseForm.jsx</td><td>ProtectedRoute</td></tr>
+    <tr><td><code>/analytics</code></td><td>Analytics.jsx</td><td>ProtectedRoute</td></tr>
+    <tr><td><code>/ai</code></td><td>AI.jsx</td><td>ProtectedRoute</td></tr>
+    <tr><td><code>/profile</code></td><td>Profile.jsx</td><td>ProtectedRoute</td></tr>
+  </tbody>
+</table>
+
+<h2>3.2 Auth Context — <code>context/AuthContext.jsx</code></h2>
+<p>Provides <code>user</code>, <code>loading</code>, <code>login()</code>, and <code>logout()</code> to the entire tree.
+On mount it calls <code>GET /api/auth/me</code> to restore session. Listens globally for
+<code>401</code> events to auto-clear state.</p>
+
+<h2>3.3 API Client — <code>api/client.js</code></h2>
+<p>All HTTP traffic goes through a centralised client. Every request uses
+<code>credentials: 'include'</code> so the browser sends the auth cookie automatically.</p>
+
+<table>
+  <thead><tr><th>Namespace</th><th>Methods</th></tr></thead>
+  <tbody>
+    <tr><td><code>api.auth</code></td><td>login, register, logout, me, forgotPassword, resetPassword</td></tr>
+    <tr><td><code>api.cases</code></td><td>list, get, create, update, delete, bulkDelete</td></tr>
+    <tr><td><code>api.users</code></td><td>profile, updateProfile, changePassword, qualifications, hospitals</td></tr>
+    <tr><td><code>api.ai</code></td><td>analyze</td></tr>
+    <tr><td><code>api.export</code></td><td>csv, excel</td></tr>
+  </tbody>
+</table>
+
+<h2>3.4 Procedure Data — <code>data/procedures.js</code></h2>
+<p>A static 4-level hierarchy used to drive cascading dropdowns in the case form.
+The same structure is mirrored in <code>backend/procedures.py</code> for server-side validation.</p>
+
+<table>
+  <thead><tr><th>Category</th><th>Types (sample)</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Obstetrics</td>
+      <td>Antenatal, Intrapartum, Postnatal</td>
+    </tr>
+    <tr>
+      <td>Gynaecology</td>
+      <td>Hysteroscopy, Laparoscopy, Laparotomy, Cervical Surgery, Urogynaecology, Vaginal Surgery, Perineal Surgery, Contraception, Pregnancy Management, Cystoscopy, Surgical Wound Debridement (+2)</td>
+    </tr>
+    <tr>
+      <td>ART</td>
+      <td>Oocyte Collection, Embryo Transfer, Male Reproductive Surgery</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Exported helpers:</p>
+<ul>
+  <li><code>getProcTypes(category)</code> — list of types for a category</li>
+  <li><code>getProcProcedures(category, type)</code> — procedures for a type</li>
+  <li><code>getProcDetails(category, type, procedure)</code> — detail options (or <code>null</code>)</li>
+  <li><code>isTerminalType(category, type)</code> — true if no further level exists</li>
+</ul>
+
+<h2>3.5 Pages</h2>
+
+<h3>Auth.jsx</h3>
+<p>Three-tab screen covering Login, Register (with auto-generated username), and Forgot Password.</p>
+
+<h3>Dashboard.jsx</h3>
+<p>Home screen with four stat cards (Total Cases, This Month, Obstetrics, ART), ART pregnancy-check
+reminders, a category donut chart, and a recent-cases list. Supports date-range and category filters.</p>
+
+<h3>Cases.jsx</h3>
+<p>Paginated, searchable case list. Supports search, category filter, pregnant-outcome filter,
+and per-page size (10 / 25 / 50 / 100). Cases can be selected for bulk delete. Includes a
+detail modal, per-row Edit/Delete, and Export to CSV/Excel buttons.</p>
+
+<h3>CaseForm.jsx</h3>
+<p>The primary data entry form, divided into conditional sections:</p>
+<div class="card-grid">
+  <div class="card">
+    <h4>Always shown</h4>
+    <ul>
+      <li>Patient ID, Date, Hospital (autocomplete)</li>
+      <li>Category → Type → Procedure → Detail (cascade)</li>
+      <li>Clinical Role (Primary / Assistant / Supervisor)</li>
+      <li>Clinical notes</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Obstetrics only</h4>
+    <ul>
+      <li>Caesarean: prev CS count, sterilisation checkbox</li>
+      <li>Complications: PPH, Shoulder Dystocia, pH, 3rd-degree tear, Other</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>ART only</h4>
+    <ul>
+      <li>Oocyte: trigger, hours, follicles, eggs retrieved, LA</li>
+      <li>Embryo Transfer: number transferred</li>
+      <li>Pregnancy toggle (sets 14-day check reminder)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Other conditional</h4>
+    <ul>
+      <li>Termination: gestation weeks</li>
+      <li>Cystoscopy: catheterisation</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Analytics.jsx</h3>
+<p>Charts and statistics: weekly spread bar chart + daily grid, 8-week trend bars,
+obstetrics outcome stats, and category distribution.</p>
+
+<h3>AI.jsx</h3>
+<p>Sends all user cases to the backend for Claude analysis. Supports prompt types:
+<em>summary</em>, <em>competency</em>, and <em>reflective</em>. Displays the result in a formatted text box.
+Includes a data-privacy notice.</p>
+
+<h3>Profile.jsx</h3>
+<p>Account management: edit name / username / email / clinical role, change password,
+and manage a qualifications list.</p>
+
+<h3>ResetPassword.jsx</h3>
+<p>Token-based password reset page. Reads the reset token from the URL query string.</p>
+
+<h2>3.6 Styles — <code>index.css</code></h2>
+<p>880+ lines of global CSS built around CSS custom properties. Key design tokens:</p>
+<pre>
+--color-primary:   #1a56db
+--color-surface:   glassmorphism (rgba + backdrop-filter)
+--font-heading:    Playfair Display (serif)
+--font-body:       Plus Jakarta Sans (sans-serif)
+</pre>
+<p>Includes dark theme, button variants (primary / glass / rose / teal), category badges,
+modals, spinner, and full responsive breakpoints.</p>
+</div>
+
+<!-- ─── 4. Backend ───────────────────────────────────────────────────── -->
+<div class="section">
+<h1>4. Backend</h1>
+
+<h2>4.1 Application Bootstrap — <code>main.py</code></h2>
+<p>FastAPI application configured with:</p>
+<ul>
+  <li>Lifespan handler that creates all DB tables on startup</li>
+  <li>CORS restricted to <code>FRONTEND_ORIGIN</code></li>
+  <li>In-memory rate limiter on all <code>/api/auth/*</code> routes (20 requests / 60 s per IP)</li>
+  <li>Security headers middleware: <code>X-Content-Type-Options</code>, <code>X-Frame-Options</code>,
+      <code>Strict-Transport-Security</code>, <code>X-XSS-Protection</code></li>
+  <li>Two utility endpoints: <code>GET /health</code> and <code>GET /api/procedures</code></li>
+</ul>
+
+<h2>4.2 Configuration — <code>config.py</code></h2>
+<p>Pydantic <code>Settings</code> class, reads from environment / <code>.env</code> file.</p>
+
+<table>
+  <thead><tr><th>Variable</th><th>Required</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>DATABASE_URL</code></td><td>Yes</td><td>PostgreSQL connection string</td></tr>
+    <tr><td><code>JWT_SECRET</code></td><td>Yes</td><td>HMAC signing key for JWTs</td></tr>
+    <tr><td><code>JWT_EXPIRY_DAYS</code></td><td>No</td><td>Cookie lifetime (default 30)</td></tr>
+    <tr><td><code>JWT_ALGORITHM</code></td><td>No</td><td>Default HS256</td></tr>
+    <tr><td><code>CLAUDE_API_KEY</code></td><td>No</td><td>Enables AI analysis feature</td></tr>
+    <tr><td><code>FRONTEND_ORIGIN</code></td><td>Yes</td><td>CORS allowed origin(s)</td></tr>
+    <tr><td><code>NODE_ENV</code></td><td>No</td><td>development / production / test</td></tr>
+    <tr><td><code>SMTP_HOST / PORT / USER / PASS</code></td><td>No</td><td>Password-reset emails</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Note:</strong> If <code>DATABASE_URL</code> starts with <code>postgres://</code> it is automatically
+  rewritten to <code>postgresql+asyncpg://</code> for the async driver.
+</div>
+
+<h2>4.3 Database — <code>database.py</code></h2>
+<p>Async SQLAlchemy engine with connection pooling. Provides:</p>
+<ul>
+  <li><code>engine</code> — async engine instance</li>
+  <li><code>AsyncSessionLocal</code> — session factory</li>
+  <li><code>Base</code> — declarative base for ORM models</li>
+  <li><code>get_db()</code> — FastAPI dependency that yields a session and commits / rolls back</li>
+</ul>
+
+<h2>4.4 ORM Models — <code>models.py</code></h2>
+
+<h3>User</h3>
+<pre>
+id             UUID (PK, default uuid4)
+full_name      String
+first_name     String
+last_name      String
+username       String  UNIQUE
+email          String  UNIQUE
+password_hash  String
+clinical_role  String
+created_at     DateTime
+updated_at     DateTime
+─── relationships ───────────────────────────
+cases          → Case[]
+qualifications → Qualification[]
+hospitals      → Hospital[]
+</pre>
+
+<h3>Case</h3>
+<pre>
+id                    UUID (PK)
+user_id               UUID  FK → User  (indexed)
+patient_id            String
+case_date             Date  (indexed)
+hospital              String
+clinical_role         String
+category              String   ← Obstetrics | Gynaecology | ART
+type                  String
+procedure             String
+detail                String (nullable)
+obs                   String (nullable)
+outcome               String (nullable)
+pregnant              Boolean
+complications         JSON  (list of strings)
+prev_cs               Integer (nullable)
+sterilisation         Boolean
+pregnancy_check_date  Date (nullable, auto-set for ART+pregnant)
+oocyte_data           JSON (nullable)
+et_data               JSON (nullable)
+extra_data            JSON (nullable)
+created_at            DateTime
+updated_at            DateTime
+</pre>
+
+<h3>Qualification</h3>
+<pre>
+id             Integer (PK)
+user_id        UUID  FK → User
+name           String
+date_obtained  Date (nullable)
+</pre>
+
+<h3>Hospital</h3>
+<pre>
+id       Integer (PK)
+user_id  UUID  FK → User
+name     String
+UNIQUE (user_id, name)
+</pre>
+
+<h2>4.5 Pydantic Schemas — <code>schemas.py</code></h2>
+
+<table>
+  <thead><tr><th>Schema</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>UserCreate</code></td><td>Registration payload</td></tr>
+    <tr><td><code>UserUpdate</code></td><td>Profile update payload</td></tr>
+    <tr><td><code>UserResponse</code></td><td>Outbound user object (no password)</td></tr>
+    <tr><td><code>PasswordChange</code></td><td>Current + new password</td></tr>
+    <tr><td><code>CaseCreate / CaseUpdate</code></td><td>Case write payloads</td></tr>
+    <tr><td><code>CaseResponse</code></td><td>Full case object</td></tr>
+    <tr><td><code>CaseListResponse</code></td><td>Paginated list: <code>{items, total, page, pages}</code></td></tr>
+    <tr><td><code>BulkDeleteRequest</code></td><td>List of case IDs</td></tr>
+    <tr><td><code>QualificationCreate/Response</code></td><td>Qualification CRUD</td></tr>
+    <tr><td><code>HospitalCreate/Response</code></td><td>Hospital autocomplete CRUD</td></tr>
+    <tr><td><code>LoginRequest</code></td><td>Username/email + password</td></tr>
+    <tr><td><code>ForgotPasswordRequest</code></td><td>Email address</td></tr>
+    <tr><td><code>ResetPasswordRequest</code></td><td>Token + new password</td></tr>
+    <tr><td><code>AIAnalyzeRequest/Response</code></td><td>Cases array + optional prompt_type</td></tr>
+  </tbody>
+</table>
+
+<h2>4.6 Auth Utilities — <code>auth.py</code></h2>
+
+<table>
+  <thead><tr><th>Function</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>_prepare_password(raw)</code></td><td>SHA-256 pre-hash before bcrypt (handles passwords &gt; 72 bytes)</td></tr>
+    <tr><td><code>verify_password(raw, hash)</code></td><td>Supports new and legacy hash formats</td></tr>
+    <tr><td><code>get_password_hash(raw)</code></td><td>bcrypt with auto-generated salt</td></tr>
+    <tr><td><code>create_access_token(user_id)</code></td><td>Signed JWT with expiry from config</td></tr>
+    <tr><td><code>decode_access_token(token)</code></td><td>Validates and decodes JWT</td></tr>
+    <tr><td><code>get_current_user(request, db)</code></td><td>FastAPI dependency — reads cookie, returns User</td></tr>
+    <tr><td><code>create_reset_token(user)</code></td><td>HMAC token valid 1 h, invalidates on password change</td></tr>
+    <tr><td><code>decode_reset_token(token, db)</code></td><td>Validates reset token, returns User</td></tr>
+    <tr><td><code>send_reset_email(email, token)</code></td><td>SMTP HTML email (logs to console if SMTP unconfigured)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ─── 5. API Reference ──────────────────────────────────────────────── -->
+<div class="section">
+<h1>5. API Reference</h1>
+
+<h2>5.1 Auth — <code>/api/auth</code></h2>
+
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/auth/register</span><span class="desc">Create account and auto-login</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/auth/login</span><span class="desc">Authenticate with username or email</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/auth/forgot-password</span><span class="desc">Send reset email (always returns 204)</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/auth/reset-password</span><span class="desc">Set new password via reset token</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/auth/logout</span><span class="desc">Clear auth cookie</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/auth/me</span><span class="desc">Return current user profile</span></div>
+
+<div class="callout">
+  Auth endpoints set an <code>httpOnly; Secure; SameSite=Lax</code> cookie named <code>access_token</code>.
+  Rate limiting: 20 requests / 60 s per IP.
+</div>
+
+<h2>5.2 Cases — <code>/api/cases</code></h2>
+
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/cases</span><span class="desc">Paginated list with filters</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/cases/{id}</span><span class="desc">Single case detail</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/cases</span><span class="desc">Create new case</span></div>
+<div class="endpoint"><span class="method put">PUT</span><span class="path">/api/cases/{id}</span><span class="desc">Update existing case</span></div>
+<div class="endpoint"><span class="method delete">DELETE</span><span class="path">/api/cases/{id}</span><span class="desc">Delete single case</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/cases/bulk-delete</span><span class="desc">Delete multiple cases by ID list</span></div>
+
+<h4>GET /api/cases — Query Parameters</h4>
+<table>
+  <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>search</code></td><td>string</td><td>Matches patient_id, hospital, or obs</td></tr>
+    <tr><td><code>category</code></td><td>string</td><td>Obstetrics | Gynaecology | ART</td></tr>
+    <tr><td><code>procedure</code></td><td>string</td><td>Filter by procedure name</td></tr>
+    <tr><td><code>pregnant</code></td><td>bool</td><td>Filter by pregnancy outcome</td></tr>
+    <tr><td><code>date_from</code></td><td>date</td><td>Start of date range</td></tr>
+    <tr><td><code>date_to</code></td><td>date</td><td>End of date range</td></tr>
+    <tr><td><code>page</code></td><td>int</td><td>Page number (default 1)</td></tr>
+    <tr><td><code>page_size</code></td><td>int</td><td>Items per page: 10 / 25 / 50 / 100</td></tr>
+  </tbody>
+</table>
+
+<div class="callout success">
+  <strong>ART pregnancy logic:</strong> When a case is created or updated with
+  <code>category=ART</code> and <code>pregnant=true</code>, <code>pregnancy_check_date</code> is automatically
+  set to <code>case_date + 14 days</code>.
+</div>
+
+<h2>5.3 Users — <code>/api/users</code></h2>
+
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/users/profile</span><span class="desc">Get current user</span></div>
+<div class="endpoint"><span class="method put">PUT</span><span class="path">/api/users/profile</span><span class="desc">Update name, email, username, clinical_role</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/users/change-password</span><span class="desc">Change password (requires current password)</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/users/qualifications</span><span class="desc">List user qualifications</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/users/qualifications</span><span class="desc">Add a qualification</span></div>
+<div class="endpoint"><span class="method delete">DELETE</span><span class="path">/api/users/qualifications/{id}</span><span class="desc">Remove a qualification</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/users/hospitals</span><span class="desc">List hospital autocomplete options</span></div>
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/users/hospitals</span><span class="desc">Add a hospital to autocomplete</span></div>
+
+<h2>5.4 AI — <code>/api/ai</code></h2>
+
+<div class="endpoint"><span class="method post">POST</span><span class="path">/api/ai/analyze</span><span class="desc">Analyse cases with Claude Opus 4.6</span></div>
+
+<h4>Request Body</h4>
+<pre>
+{
+  "cases": [ ...CaseResponse[] ],   // max 500 cases
+  "prompt_type": "reflective"       // summary | competency | reflective
+}
+</pre>
+
+<div class="callout warn">
+  Requires <code>CLAUDE_API_KEY</code> to be set in the environment. The key is never
+  returned to the frontend. Timeout: 60 seconds.
+</div>
+
+<h2>5.5 Export — <code>/api/export</code></h2>
+
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/export/csv</span><span class="desc">Download all cases as CSV</span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/export/excel</span><span class="desc">Download all cases as styled XLSX</span></div>
+
+<p>Both formats include: Case ID, Patient ID, Date, Hospital, Clinical Role, Category,
+Type, Procedure, Detail, Observations, Outcome, Pregnant, Complications, Previous CS,
+Sterilisation, Pregnancy Check Date, Oocyte Data, ET Data, Extra Data, Created At.</p>
+
+<p>Excel extras: blue header row, alternating row shading, frozen header, auto-sized columns (max 60 chars).</p>
+
+<h2>5.6 Utility Endpoints</h2>
+
+<div class="endpoint"><span class="method get">GET</span><span class="path">/health</span><span class="desc">Health check — returns <code>{"status": "ok"}</code></span></div>
+<div class="endpoint"><span class="method get">GET</span><span class="path">/api/procedures</span><span class="desc">Full procedure hierarchy (public, no auth required)</span></div>
+</div>
+
+<!-- ─── 6. Data Models ───────────────────────────────────────────────── -->
+<div class="section">
+<h1>6. Data Models</h1>
+
+<h2>Entity Relationship Overview</h2>
+<pre>
+User ──┬──&lt; Case          (one-to-many, all queries scoped by user_id)
+       ├──&lt; Qualification (one-to-many)
+       └──&lt; Hospital      (one-to-many, UNIQUE name per user)
+</pre>
+
+<h2>Procedure Hierarchy</h2>
+<p>Cases store procedure data across four columns. Not all levels are always populated.</p>
+
+<pre>
+category  →  type          →  procedure          →  detail
+─────────────────────────────────────────────────────────────
+ART          Oocyte           Transvaginal          (none)
+             Collection       Transabdominal        (none)
+
+             Embryo           Embryo Transfer       (none)
+             Transfer
+
+Obstetrics   Intrapartum      Caesarean Section     Emergency
+                                                    Elective
+                                                    Category 1
+                                                    Category 2
+                                                    Category 3
+                                                    Category 4
+                                                    ...
+
+             Intrapartum      Vaginal Birth         SVD
+                                                    Vacuum
+                                                    Forceps
+
+Gynaecology  Laparoscopy      Diagnostic            (none)
+                              Operative             (none)
+             ...
+</pre>
+
+<h2>JSON Fields on Case</h2>
+
+<h3><code>complications</code> — list of strings</h3>
+<pre>["PPH", "Shoulder Dystocia", "3rd Degree Tear"]</pre>
+
+<h3><code>oocyte_data</code> — object</h3>
+<pre>
+{
+  "trigger": "hCG",
+  "hours_after_trigger": 36,
+  "follicles": 12,
+  "eggs_retrieved": 10,
+  "local_anaesthetic": true
+}
+</pre>
+
+<h3><code>et_data</code> — object</h3>
+<pre>{ "embryos_transferred": 2 }</pre>
+
+<h3><code>extra_data</code> — object (general overflow)</h3>
+<pre>
+{
+  "gestation_weeks": 12,
+  "catheterisation": true
+}
+</pre>
+</div>
+
+<!-- ─── 7. Security ──────────────────────────────────────────────────── -->
+<div class="section">
+<h1>7. Security</h1>
+
+<table class="sec-row">
+  <thead><tr><th>Concern</th><th>Implementation</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Authentication</td>
+      <td>JWT stored in <code>httpOnly; Secure; SameSite=Lax</code> cookie. Not accessible to JavaScript.</td>
+    </tr>
+    <tr>
+      <td>Password storage</td>
+      <td>SHA-256 pre-hash → bcrypt with auto-salt. Pre-hashing handles passwords &gt; 72 bytes (bcrypt limit).</td>
+    </tr>
+    <tr>
+      <td>Rate limiting</td>
+      <td>In-memory counter per IP. Auth routes capped at 20 req / 60 s.</td>
+    </tr>
+    <tr>
+      <td>CORS</td>
+      <td>Restricted to <code>FRONTEND_ORIGIN</code> env var. Credentials mode enabled.</td>
+    </tr>
+    <tr>
+      <td>SQL injection</td>
+      <td>SQLAlchemy ORM with parameterised queries throughout. No raw SQL strings.</td>
+    </tr>
+    <tr>
+      <td>User isolation</td>
+      <td>Every case / qualification / hospital query includes <code>WHERE user_id = :current_user_id</code>.</td>
+    </tr>
+    <tr>
+      <td>Security headers</td>
+      <td><code>Strict-Transport-Security</code>, <code>X-Content-Type-Options: nosniff</code>, <code>X-Frame-Options: DENY</code>, <code>X-XSS-Protection: 1; mode=block</code></td>
+    </tr>
+    <tr>
+      <td>Password reset</td>
+      <td>HMAC token valid for 1 hour. Token is invalidated immediately on password change by incorporating the password hash into the signing material.</td>
+    </tr>
+    <tr>
+      <td>AI key exposure</td>
+      <td><code>CLAUDE_API_KEY</code> is server-side only. Never returned in any response or logged.</td>
+    </tr>
+    <tr>
+      <td>Forgot password</td>
+      <td>Endpoint always returns <code>204</code> regardless of whether the email exists (prevents enumeration).</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ─── 8. Deployment ────────────────────────────────────────────────── -->
+<div class="section">
+<h1>8. Deployment</h1>
+
+<h2>Docker Compose Services</h2>
+
+<table>
+  <thead><tr><th>Service</th><th>Image / Build</th><th>Port</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>backend</code></td><td>Python FastAPI</td><td>8001 (internal 8000)</td><td>Reads <code>.env</code> file</td></tr>
+    <tr><td><code>frontend</code></td><td>Nginx + React build</td><td>18000</td><td>Static files + proxy to backend</td></tr>
+    <tr><td><code>db</code> (local only)</td><td>postgres:16</td><td>5432</td><td>Named volume for persistence</td></tr>
+  </tbody>
+</table>
+
+<h4>Production network</h4>
+<p>Both backend and frontend attach to an external <code>docker-shared-net</code> bridge network.
+This allows Nginx on the host to reverse-proxy to the containers.</p>
+
+<h2>Local Development</h2>
+<pre>
+# Start all services (including local Postgres)
+docker compose -f docker-compose.local.yml up
+
+# Backend available at:  http://localhost:8000
+# Frontend available at: http://localhost:18000
+</pre>
+
+<h2>Production Deployment</h2>
+<pre>
+# Build and start
+docker compose up -d --build
+
+# View logs
+docker compose logs -f backend
+
+# Database backup
+docker exec &lt;db-container&gt; pg_dump -U postgres prolog &gt; backup.sql
+</pre>
+
+<h2>Environment Variables (.env)</h2>
+<pre>
+DATABASE_URL=postgresql+asyncpg://user:pass@db:5432/prolog
+JWT_SECRET=your-secret-key-here
+JWT_EXPIRY_DAYS=30
+CLAUDE_API_KEY=sk-ant-...          # optional
+FRONTEND_ORIGIN=https://your-domain.com
+SMTP_HOST=smtp.example.com         # optional
+SMTP_PORT=587
+SMTP_USER=noreply@example.com
+SMTP_PASS=smtp-password
+NODE_ENV=production
+</pre>
+
+<div class="callout warn">
+  <strong>Never commit <code>.env</code> to version control.</strong> Use <code>.env.example</code>
+  as a template and add <code>.env</code> to <code>.gitignore</code>.
+</div>
+
+<h2>Nginx Configuration (production)</h2>
+<p>Nginx terminates SSL (Let's Encrypt), proxies <code>/api/*</code> requests to the FastAPI container,
+and serves the React SPA static build for all other paths. The SPA fallback
+(<code>try_files $uri /index.html</code>) is required for client-side routing to work.</p>
+
+<hr class="divider" />
+
+<p style="color:#9ca3af; font-size:12px; text-align:center;">
+  ProLog Developer Documentation · v3.0 · Generated February 2026
+</p>
+</div>
+
+</div><!-- /content -->
+</body>
+</html>
