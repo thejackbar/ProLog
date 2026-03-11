@@ -128,7 +128,7 @@ export default function CaseForm() {
   const showComplications = category === 'Obstetrics'
   const showTopGestation =
     category === 'Gynaecology' &&
-    (procedure === 'Termination of Pregnancy' || type === 'Pregnancy Management')
+    procedure === 'Termination of Pregnancy'
   const showCystoscopy = category === 'Gynaecology' && type === 'Cystoscopy'
 
   // Types for selected category
