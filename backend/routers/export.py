@@ -15,7 +15,7 @@ from auth import get_current_user
 from database import get_db
 from models import Case, User
 
-router = APIRouter(prefix="/api/export", tags=["export"])
+router = APIRouter(prefix="/api/export", tags=["export"], redirect_slashes=False)
 
 # Column definitions: (header_label, case_attribute)
 EXPORT_COLUMNS: list[tuple[str, str]] = [

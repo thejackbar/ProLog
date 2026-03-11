@@ -8,7 +8,7 @@ from config import settings
 from models import User
 from schemas import AIAnalyzeRequest, AIAnalyzeResponse
 
-router = APIRouter(prefix="/api/ai", tags=["ai"])
+router = APIRouter(prefix="/api/ai", tags=["ai"], redirect_slashes=False)
 
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_MODEL = "claude-opus-4-6"

@@ -16,7 +16,7 @@ from schemas import (
     CaseUpdate,
 )
 
-router = APIRouter(prefix="/api/cases", tags=["cases"])
+router = APIRouter(prefix="/api/cases", tags=["cases"], redirect_slashes=False)
 
 ART_PREGNANCY_CHECK_OFFSET = timedelta(days=14)
 
