@@ -35,6 +35,7 @@ app = FastAPI(
     docs_url="/api/docs" if not settings.is_production else None,
     redoc_url="/api/redoc" if not settings.is_production else None,
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 
