@@ -18,7 +18,7 @@ from database import get_db
 from models import User
 from schemas import ForgotPasswordRequest, LoginRequest, ResetPasswordRequest, TokenResponse, UserCreate, UserResponse
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+router = APIRouter(prefix="/api/auth", tags=["auth"], redirect_slashes=False)
 
 COOKIE_NAME = "access_token"
 COOKIE_MAX_AGE = settings.JWT_EXPIRY_DAYS * 24 * 60 * 60  # seconds

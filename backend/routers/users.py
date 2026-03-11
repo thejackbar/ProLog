@@ -15,7 +15,7 @@ from schemas import (
     UserUpdate,
 )
 
-router = APIRouter(prefix="/api/users", tags=["users"])
+router = APIRouter(prefix="/api/users", tags=["users"], redirect_slashes=False)
 
 
 @router.get("/profile", response_model=UserResponse)
