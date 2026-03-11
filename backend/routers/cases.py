@@ -36,7 +36,7 @@ def _apply_pregnancy_check(case: Case) -> None:
 
 
 # ── List cases ────────────────────────────────────────────────────────────────
-@router.get("/", response_model=CaseListResponse)
+@router.get("", response_model=CaseListResponse)
 async def list_cases(
     search: str | None = Query(None, description="Search patient_id, hospital, obs"),
     category: str | None = Query(None),
@@ -123,7 +123,7 @@ async def get_case(
 
 
 # ── Create case ───────────────────────────────────────────────────────────────
-@router.post("/", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_case(
     body: CaseCreate,
     current_user: User = Depends(get_current_user),
