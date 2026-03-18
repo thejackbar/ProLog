@@ -56,7 +56,7 @@ export default function CaseForm() {
   const [sterilisation, setSterilisation] = useState(false)
 
   // ART
-  const [pregnant, setPregnant] = useState(false)
+  const [pregnant, setPregnant] = useState(null)
   const [ooTrigger, setOoTrigger] = useState('')
   const [ooTriggerOther, setOoTriggerOther] = useState('')
   const [ooHours, setOoHours] = useState('')
@@ -98,7 +98,7 @@ export default function CaseForm() {
         setComplications(c.complications || [])
         setPrevCs(c.prev_cs != null ? String(c.prev_cs) : '')
         setSterilisation(c.sterilisation || false)
-        setPregnant(c.pregnant || false)
+        setPregnant(c.pregnant ?? null)
         if (c.oocyte_data) {
           setOoTrigger(c.oocyte_data.trigger || '')
           setOoHours(c.oocyte_data.hours != null ? String(c.oocyte_data.hours) : '')
@@ -374,12 +374,14 @@ export default function CaseForm() {
               </div>
               <div className="field">
                 <label>Hours post-trigger</label>
-                <select value={ooHours} onChange={(e) => setOoHours(e.target.value)}>
-                  <option value="">Select hours…</option>
-                  {Array.from({ length: 49 }, (_, i) => i * 0.5).map((h) => (
-                    <option key={h} value={h}>{h}</option>
-                  ))}
-                </select>
+                <input
+                  type="number"
+                  value={ooHours}
+                  onChange={(e) => setOoHours(e.target.value)}
+                  min="0"
+                  step="0.01"
+                  placeholder="e.g. 36.5"
+                />
               </div>
             </div>
             {ooTrigger === 'Other' && (
@@ -413,23 +415,51 @@ export default function CaseForm() {
           </div>
         )}
 
-        {/* ART: Pregnant toggle */}
+        {/* ART: Pregnant Yes/No */}
         {showPregnant && (
           <div style={{ marginBottom: 14 }}>
-            <div
-              className={'toggle-row pregnant' + (pregnant ? ' checked' : '')}
-              onClick={() => setPregnant((p) => !p)}
-            >
-              <div className="chk-box" style={{ background: pregnant ? 'var(--green)' : undefined, borderColor: pregnant ? 'var(--green)' : undefined }}>
-                {pregnant ? '✓' : ''}
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Pregnant</div>
-                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>
-                  Retrospective flag — tick when pregnancy is confirmed
-                </div>
-              </div>
+            <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8, display: 'block' }}>Pregnant</label>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setPregnant((p) => p === true ? null : true)}
+                style={{
+                  padding: '9px 22px',
+                  borderRadius: 9,
+                  border: `1px solid ${pregnant === true ? 'rgba(52,211,153,0.5)' : 'var(--border)'}`,
+                  background: pregnant === true ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.04)',
+                  color: pregnant === true ? 'var(--teal)' : 'var(--muted)',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                ✓ Yes
+              </button>
+              <button
+                type="button"
+                onClick={() => setPregnant((p) => p === false ? null : false)}
+                style={{
+                  padding: '9px 22px',
+                  borderRadius: 9,
+                  border: `1px solid ${pregnant === false ? 'rgba(251,113,133,0.5)' : 'var(--border)'}`,
+                  background: pregnant === false ? 'rgba(251,113,133,0.12)' : 'rgba(255,255,255,0.04)',
+                  color: pregnant === false ? 'var(--rose)' : 'var(--muted)',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                ✗ No
+              </button>
             </div>
+            {pregnant === null && (
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
+                Unanswered — this case will appear in Pregnancy Checks on the dashboard
+              </div>
+            )}
           </div>
         )}
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { catColors } from '../data/procedures'
 
@@ -49,6 +50,7 @@ function DistBar({ data, colorFn }) {
 }
 
 export default function Analytics() {
+  const navigate = useNavigate()
   const [cases, setCases] = useState([])
   const [loading, setLoading] = useState(true)
   const [weekOffset, setWeekOffset] = useState(0)
@@ -143,8 +145,14 @@ export default function Analytics() {
           <button className="btn btn-glass btn-sm" onClick={() => setWeekOffset((w) => w + 1)} style={{ width: 30, height: 30, padding: 0 }}>›</button>
         </div>
         <div className="daily-grid">
-          {weekDays.map(({ name, num, count, isToday }) => (
-            <div key={name} className={`day-col${isToday ? ' today' : ''}`}>
+          {weekDays.map(({ name, num, ds, count, isToday }) => (
+            <div
+              key={name}
+              className={`day-col${isToday ? ' today' : ''}`}
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate(`/cases?date=${ds}`)}
+              title={`View cases for ${ds}`}
+            >
               <div className="day-name">{name}</div>
               <div className="day-num">{num}</div>
               <div className={`day-count${count === 0 ? ' zero' : ''}`}>{count}</div>

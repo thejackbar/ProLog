@@ -128,6 +128,8 @@ export default function Cases() {
   const [search, setSearch] = useState('')
   const [filterCat, setFilterCat] = useState(searchParams.get('category') || '')
   const [filterPreg, setFilterPreg] = useState('')
+  const [filterDateFrom, setFilterDateFrom] = useState(searchParams.get('date') || '')
+  const [filterDateTo, setFilterDateTo] = useState(searchParams.get('date') || '')
 
   const [selected, setSelected] = useState(new Set())
   const [modalCase, setModalCase] = useState(null)
@@ -139,6 +141,8 @@ export default function Cases() {
       if (search) params.search = search
       if (filterCat) params.category = filterCat
       if (filterPreg === 'yes') params.pregnant = true
+      if (filterDateFrom) params.date_from = filterDateFrom
+      if (filterDateTo) params.date_to = filterDateTo
       const data = await api.cases.list(params)
       setCases(data.cases || [])
       setTotal(data.total || 0)
@@ -147,7 +151,7 @@ export default function Cases() {
     } finally {
       setLoading(false)
     }
-  }, [page, perPage, search, filterCat, filterPreg])
+  }, [page, perPage, search, filterCat, filterPreg, filterDateFrom, filterDateTo])
 
   useEffect(() => { load() }, [load])
 
@@ -207,6 +211,28 @@ export default function Cases() {
           <option value="">Any Outcome</option>
           <option value="yes">Pregnant ✓</option>
         </select>
+        <input
+          type="date"
+          value={filterDateFrom}
+          onChange={(e) => { setFilterDateFrom(e.target.value); setPage(1) }}
+          title="From date"
+        />
+        <span style={{ fontSize: 11, color: 'var(--faint)', alignSelf: 'center' }}>to</span>
+        <input
+          type="date"
+          value={filterDateTo}
+          onChange={(e) => { setFilterDateTo(e.target.value); setPage(1) }}
+          title="To date"
+        />
+        {(filterDateFrom || filterDateTo) && (
+          <button
+            className="btn btn-glass btn-sm"
+            onClick={() => { setFilterDateFrom(''); setFilterDateTo(''); setPage(1) }}
+            style={{ width: 'auto' }}
+          >
+            ✕ Date
+          </button>
+        )}
       </div>
 
       {selected.size > 0 && (

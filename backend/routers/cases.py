@@ -22,17 +22,15 @@ ART_PREGNANCY_CHECK_OFFSET = timedelta(days=14)
 
 
 def _apply_pregnancy_check(case: Case) -> None:
-    """Auto-set pregnancy_check_date for ART pregnant cases."""
+    """Set pregnancy_check_date for ART cases where pregnancy outcome is unanswered (None)."""
     if (
         case.category == "ART"
-        and case.pregnant is True
+        and case.pregnant is None
         and case.case_date is not None
     ):
         case.pregnancy_check_date = case.case_date + ART_PREGNANCY_CHECK_OFFSET
     else:
-        # Clear it if conditions no longer apply
-        if case.category != "ART" or not case.pregnant:
-            case.pregnancy_check_date = None
+        case.pregnancy_check_date = None
 
 
 # ── List cases ────────────────────────────────────────────────────────────────

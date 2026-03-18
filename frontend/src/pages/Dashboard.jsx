@@ -145,7 +145,7 @@ export default function Dashboard() {
           borderBottom: '1px solid var(--border)',
           cursor: 'pointer',
         }}
-        onClick={() => navigate('/cases')}
+        onClick={() => navigate(`/cases/${c.id}/edit`)}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
           <span style={{ fontWeight: 700, fontSize: 13 }}>{c.patient_id}</span>
