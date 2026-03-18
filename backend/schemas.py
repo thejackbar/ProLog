@@ -74,7 +74,7 @@ class CaseCreate(BaseModel):
     obs: str | None = None
     outcome: str | None = None
 
-    pregnant: bool | None = False
+    pregnant: bool | None = None
     complications: list[str] | None = Field(default_factory=list)
     prev_cs: int | None = Field(None, ge=0)
     sterilisation: bool | None = False
