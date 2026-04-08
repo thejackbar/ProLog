@@ -70,9 +70,9 @@ async def list_cases(
             )
         )
     if date_from:
-        filters.append(Case.case_date >= date_from)
+        filters.append(Case.case_date >= date.fromisoformat(date_from))
     if date_to:
-        filters.append(Case.case_date <= date_to)
+        filters.append(Case.case_date <= date.fromisoformat(date_to))
     if pregnant is not None:
         filters.append(Case.pregnant == pregnant)
 
