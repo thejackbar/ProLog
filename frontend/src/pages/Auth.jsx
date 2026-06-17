@@ -41,7 +41,11 @@ export default function Auth() {
       await login({ username: liUser, password: liPass })
       navigate('/dashboard')
     } catch (err) {
-      setError(err.message || 'Invalid username or password.')
+      setError(
+        err.status === 401
+          ? 'Incorrect username or password.'
+          : err.message || 'Something went wrong. Please try again.'
+      )
     } finally {
       setLoading(false)
     }
