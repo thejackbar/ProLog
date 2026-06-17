@@ -26,11 +26,24 @@ def _prepare_password(plain: str) -> bytes:
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    # Try current method (sha256 pre-hash) first
-    if bcrypt.checkpw(_prepare_password(plain), hashed.encode()):
-        return True
-    # Fall back to legacy method (no pre-hash) for users registered before fadebbe
-    return bcrypt.checkpw(plain.encode(), hashed.encode())
+    if not hashed:
+        return False
+    # Try current method (sha256 pre-hash) first, then fall back to the legacy
+    # method (no pre-hash) for users registered before fadebbe.
+    for candidate in (_prepare_password(plain), plain.encode()):
+        try:
+            if bcrypt.checkpw(candidate, hashed.encode()):
+                return True
+        except ValueError:
+            # The stored hash isn't a valid bcrypt string (corrupt, truncated,
+            # or from an unsupported legacy scheme). Treat it as a failed match
+            # rather than letting bcrypt's ValueError bubble up — an unhandled
+            # exception here returns a 500 that the frontend surfaces as a
+            # generic "Request failed" on sign-in. The user can recover via
+            # the forgot-password flow.
+            log.warning("Malformed password hash encountered during login; treating as non-match")
+            return False
+    return False
 
 
 def get_password_hash(plain: str) -> str:
